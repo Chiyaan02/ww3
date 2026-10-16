@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ta">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,10 +33,6 @@
 
         .rolling {
             animation: dice-roll 0.5s ease-in-out;
-        }
-
-        .pulse-glow {
-            animation: pulse 1.5s infinite ease-in-out;
         }
     </style>
 </head>
@@ -132,7 +128,7 @@
 
     </main>
 
-    <!-- Online Lobby Modal (Create / Join Room) -->
+    <!-- Online Lobby Modal -->
     <div id="lobby-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-center">
             <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
@@ -164,6 +160,20 @@
         </div>
     </div>
 
+    <!-- GAME OVER / FINISH MODAL -->
+    <div id="gameover-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl text-center border border-slate-100 transform transition-all scale-100">
+            <div id="winner-trophy" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-xl animate-bounce">
+                🏆
+            </div>
+            <h2 id="winner-title" class="text-2xl font-extrabold text-slate-800 mb-2">Game Finished!</h2>
+            <p id="winner-message" class="text-sm text-slate-600 mb-6 leading-relaxed">Red Team destroyed all enemy airplanes!</p>
+            <button onclick="restartGame()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95">
+                🔄 Play Again
+            </button>
+        </div>
+    </div>
+
     <!-- Custom Notification Modal -->
     <div id="notification-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center border border-slate-100">
@@ -180,16 +190,15 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global Firebase Configuration
-   const firebaseConfig = {
-  apiKey: "AIzaSyDE_qI-3uItuj1FHsy7SEWn2YudZnR1cF4",
-  authDomain: "world-war-3-3e98b.firebaseapp.com",
-  projectId: "world-war-3-3e98b",
-  storageBucket: "world-war-3-3e98b.firebasestorage.app",
-  messagingSenderId: "591955421240",
-  appId: "1:591955421240:web:36093e16132f6f7f265ecd",
-  measurementId: "G-VT2ET6RMG4"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyDE_qI-3uItuj1FHsy7SEWn2YudZnR1cF4",
+            authDomain: "world-war-3-3e98b.firebaseapp.com",
+            projectId: "world-war-3-3e98b",
+            storageBucket: "world-war-3-3e98b.firebasestorage.app",
+            messagingSenderId: "591955421240",
+            appId: "1:591955421240:web:36093e16132f6f7f265ecd",
+            measurementId: "G-VT2ET6RMG4"
+        };
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'airplane-combat-game';
 
@@ -250,6 +259,7 @@
         let gameState = {
             status: 'waiting', // 'waiting', 'active', 'finished'
             turn: 'red',
+            winner: null,
             diceRolled: false,
             diceValue: 0,
             remainingSteps: 0,
@@ -260,7 +270,6 @@
             clashPoints: []
         };
 
-        // Initial Airplane Positions
         function getDefaultPlanes() {
             return [
                 { id: 'r1', player: 'red', x: 3, y: 2, active: true },
@@ -272,7 +281,6 @@
             ];
         }
 
-        // Initialize App & Auth
         async function initAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -305,7 +313,6 @@
             requestAnimationFrame(animationLoop);
         });
 
-        // Modal Helpers
         window.showNotification = function(title, message, type = 'info') {
             document.getElementById('notification-title').innerText = title;
             document.getElementById('notification-message').innerText = message;
@@ -329,12 +336,10 @@
 
         window.copyRoomCode = function() {
             if (!currentRoomId) return;
-            document.execCommand('copy');
             navigator.clipboard?.writeText(currentRoomId);
             window.showNotification("Copied!", `Room Code ${currentRoomId} copied to clipboard! Share it with Player 2.`, "success");
         };
 
-        // Room Creation & Joining Logic
         window.createRoom = async function() {
             if (!currentUser) await initAuth();
             const roomId = Math.floor(1000 + Math.random() * 9000).toString();
@@ -349,6 +354,7 @@
                 guestUid: null,
                 status: 'waiting',
                 turn: 'red',
+                winner: null,
                 diceRolled: false,
                 diceValue: 0,
                 remainingSteps: 0,
@@ -422,6 +428,7 @@
 
                 gameState.status = data.status;
                 gameState.turn = data.turn;
+                gameState.winner = data.winner;
                 gameState.diceRolled = data.diceRolled;
                 gameState.diceValue = data.diceValue;
                 gameState.remainingSteps = data.remainingSteps;
@@ -432,11 +439,50 @@
                     triggerExplosion(data.lastExplosion.x, data.lastExplosion.y, data.lastExplosion.color);
                 }
 
+                if (gameState.status === 'finished' && gameState.winner) {
+                    showGameOverModal(gameState.winner);
+                }
+
                 updateUI();
-            }, (error) => {
-                console.error("Room sync error:", error);
             });
         }
+
+        function showGameOverModal(winnerRole) {
+            const modal = document.getElementById('gameover-modal');
+            const trophy = document.getElementById('winner-trophy');
+            const title = document.getElementById('winner-title');
+            const msg = document.getElementById('winner-message');
+
+            modal.classList.remove('hidden');
+
+            const isWinner = winnerRole === myRole;
+
+            if (winnerRole === 'red') {
+                trophy.className = 'w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-xl animate-bounce';
+                title.innerText = isWinner ? "🎉 VICTORY! 🎉" : "💥 DEFEAT! 💥";
+                msg.innerText = isWinner ? "You destroyed all Blue Fleet airplanes!" : "Red Fleet destroyed all your airplanes!";
+            } else {
+                trophy.className = 'w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-xl animate-bounce';
+                title.innerText = isWinner ? "🎉 VICTORY! 🎉" : "💥 DEFEAT! 💥";
+                msg.innerText = isWinner ? "You destroyed all Red Fleet airplanes!" : "Blue Fleet destroyed all your airplanes!";
+            }
+        }
+
+        window.restartGame = async function() {
+            if (!roomDocRef) return;
+            document.getElementById('gameover-modal').classList.add('hidden');
+
+            await updateDoc(roomDocRef, {
+                status: 'active',
+                turn: 'red',
+                winner: null,
+                diceRolled: false,
+                diceValue: 0,
+                remainingSteps: 0,
+                planes: getDefaultPlanes(),
+                lines: []
+            });
+        };
 
         function updateRoleBadge() {
             const badge = document.getElementById('role-badge');
@@ -477,7 +523,10 @@
 
             const isMyTurn = gameState.turn === myRole;
 
-            if (gameState.status === 'waiting') {
+            if (gameState.status === 'finished') {
+                rollBtn.disabled = true;
+                msgBox.innerText = `Game Over! ${gameState.winner.toUpperCase()} player won the match!`;
+            } else if (gameState.status === 'waiting') {
                 rollBtn.disabled = true;
                 msgBox.innerText = `Waiting for Player 2 (Blue) to join using room code: ${currentRoomId}...`;
             } else if (!isMyTurn) {
@@ -684,6 +733,21 @@
                 return p;
             });
 
+            // Check Game Over Condition
+            const redPlanesLeft = updatedPlanes.filter(p => p.player === 'red' && p.active).length;
+            const bluePlanesLeft = updatedPlanes.filter(p => p.player === 'blue' && p.active).length;
+
+            let winner = null;
+            let status = 'active';
+
+            if (redPlanesLeft === 0) {
+                winner = 'blue';
+                status = 'finished';
+            } else if (bluePlanesLeft === 0) {
+                winner = 'red';
+                status = 'finished';
+            }
+
             const nextTurn = gameState.turn === 'red' ? 'blue' : 'red';
 
             gameState.selectedPlaneId = null;
@@ -694,6 +758,8 @@
                     lines: updatedLines,
                     planes: updatedPlanes,
                     turn: nextTurn,
+                    status: status,
+                    winner: winner,
                     diceRolled: false,
                     diceValue: 0,
                     remainingSteps: 0,
