@@ -20,7 +20,7 @@
             background-image: 
                 linear-gradient(to right, #e2e8f0 1px, transparent 1px),
                 linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
-            background-size: 30px 30px;
+            background-size: 32px 32px;
         }
 
         @keyframes dice-roll {
@@ -34,21 +34,45 @@
         .rolling {
             animation: dice-roll 0.5s ease-in-out;
         }
+
+        /* Floating Sticker Animation */
+        @keyframes pop-float {
+            0% { transform: scale(0.3) translateY(20px); opacity: 0; }
+            30% { transform: scale(1.3) translateY(-10px); opacity: 1; }
+            70% { transform: scale(1) translateY(-30px); opacity: 1; }
+            100% { transform: scale(0.8) translateY(-60px); opacity: 0; }
+        }
+
+        .floating-sticker {
+            animation: pop-float 2.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Custom scrollbar for chat */
+        .chat-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+        .chat-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-between p-3 md:p-6 text-slate-800">
+<body class="min-h-screen flex flex-col items-center justify-between p-2 md:p-5 text-slate-800">
 
     <!-- Top Header -->
-    <header class="w-full max-w-5xl bg-white shadow-md rounded-2xl p-4 mb-4 flex flex-col sm:flex-row justify-between items-center border border-slate-100 gap-3">
+    <header class="w-full max-w-6xl bg-white shadow-md rounded-2xl p-4 mb-3 flex flex-col sm:flex-row justify-between items-center border border-slate-100 gap-3">
         <div class="flex items-center space-x-3">
-            <div class="bg-indigo-600 text-white p-3 rounded-xl shadow-lg">
+            <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
             </div>
             <div>
                 <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Online Airplane Battle</h1>
-                <p class="text-xs text-slate-500">2-Player Real-time Grid Combat</p>
+                <p class="text-xs text-slate-500">2-Player Grid Air Defense Combat</p>
             </div>
         </div>
 
@@ -70,42 +94,42 @@
     </header>
 
     <!-- Main Game Workspace -->
-    <main class="w-full max-w-5xl flex flex-col lg:flex-row gap-6 flex-grow items-stretch justify-center">
+    <main class="w-full max-w-6xl flex flex-col lg:flex-row gap-4 flex-grow items-stretch justify-center">
         
         <!-- Sidebar Controls & Status -->
-        <div class="w-full lg:w-80 bg-white rounded-2xl shadow-md p-5 flex flex-col justify-between border border-slate-100">
+        <div class="w-full lg:w-72 bg-white rounded-2xl shadow-md p-4 flex flex-col justify-between border border-slate-100">
             <div>
-                <h2 class="text-lg font-bold text-slate-700 mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
+                <h2 class="text-base font-bold text-slate-700 mb-3 pb-2 border-b border-slate-100 flex items-center justify-between">
                     <span>Battle Status</span>
-                    <span id="turn-badge" class="text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider bg-red-100 text-red-600">Red's Turn</span>
+                    <span id="turn-badge" class="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-red-100 text-red-600">Red's Turn</span>
                 </h2>
 
                 <!-- Fleet Stats -->
-                <div class="grid grid-cols-2 gap-3 mb-6">
-                    <div id="red-stat-card" class="bg-red-50 border border-red-100 p-3 rounded-xl text-center">
-                        <span class="block text-xs font-semibold text-red-500 uppercase">Red Fleet (Top)</span>
-                        <span id="red-planes-count" class="text-2xl font-bold text-red-600">3</span>
-                        <span class="text-xs text-slate-400 block">Planes Left</span>
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <div id="red-stat-card" class="bg-red-50 border border-red-100 p-2.5 rounded-xl text-center">
+                        <span class="block text-[10px] font-semibold text-red-500 uppercase">Red (Top Half)</span>
+                        <span id="red-planes-count" class="text-xl font-bold text-red-600">3</span>
+                        <span class="text-[10px] text-slate-400 block">Planes Left</span>
                     </div>
-                    <div id="blue-stat-card" class="bg-blue-50 border border-blue-100 p-3 rounded-xl text-center">
-                        <span class="block text-xs font-semibold text-blue-500 uppercase">Blue Fleet (Bottom)</span>
-                        <span id="blue-planes-count" class="text-2xl font-bold text-blue-600">3</span>
-                        <span class="text-xs text-slate-400 block">Planes Left</span>
+                    <div id="blue-stat-card" class="bg-blue-50 border border-blue-100 p-2.5 rounded-xl text-center">
+                        <span class="block text-[10px] font-semibold text-blue-500 uppercase">Blue (Bottom Half)</span>
+                        <span id="blue-planes-count" class="text-xl font-bold text-blue-600">3</span>
+                        <span class="text-[10px] text-slate-400 block">Planes Left</span>
                     </div>
                 </div>
 
                 <!-- Interactive Dice Roller -->
-                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center mb-6 shadow-inner">
-                    <h3 class="text-sm font-semibold text-slate-600 mb-3">🎲 Dice Roller</h3>
-                    <div class="flex justify-center items-center mb-4">
-                        <div id="dice-box" class="w-20 h-20 bg-white border-2 border-indigo-500 rounded-2xl shadow-md flex items-center justify-center text-3xl font-bold text-indigo-600">
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-center mb-4 shadow-inner">
+                    <h3 class="text-xs font-semibold text-slate-600 mb-2">🎲 Dice Roller</h3>
+                    <div class="flex justify-center items-center mb-3">
+                        <div id="dice-box" class="w-16 h-16 bg-white border-2 border-indigo-500 rounded-2xl shadow-md flex items-center justify-center text-2xl font-bold text-indigo-600">
                             -
                         </div>
                     </div>
-                    <button id="roll-btn" onclick="rollDice()" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button id="roll-btn" onclick="rollDice()" class="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold rounded-xl shadow-md transition transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                         Roll Dice
                     </button>
-                    <p id="dice-instruction" class="text-xs text-slate-500 mt-3 font-medium">Roll to get your step allowance!</p>
+                    <p id="dice-instruction" class="text-[11px] text-slate-500 mt-2 font-medium">Roll to get your move steps!</p>
                 </div>
             </div>
 
@@ -116,14 +140,55 @@
         </div>
 
         <!-- Grid Board Canvas Area -->
-        <div class="flex-grow bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center border border-slate-100 overflow-hidden relative">
-            <div id="canvas-container" class="w-full overflow-auto flex justify-center items-center p-2">
+        <div class="flex-grow bg-white rounded-2xl shadow-md p-3 flex flex-col items-center justify-center border border-slate-100 overflow-hidden relative min-h-[500px]">
+            
+            <!-- Canvas Overlay for Animated Stickers -->
+            <div id="sticker-layer" class="absolute inset-0 pointer-events-none z-20 flex items-center justify-center overflow-hidden"></div>
+
+            <div id="canvas-container" class="w-full overflow-auto flex justify-center items-center p-1">
                 <canvas id="game-canvas" class="grid-paper rounded-xl shadow-sm border border-slate-200 cursor-crosshair"></canvas>
             </div>
-            <div class="mt-3 flex items-center justify-between w-full text-xs text-slate-400 px-2">
-                <span>Select active airplane → Click adjacent grid dots to draw bullet lines.</span>
+            
+            <div class="mt-2 flex items-center justify-between w-full text-xs text-slate-400 px-2">
+                <span>🛡️ Red: Top Zone (Rows 0-9) | Blue: Bottom Zone (Rows 10-20)</span>
                 <span id="sync-status" class="text-emerald-600 font-semibold flex items-center gap-1">🟢 Connected</span>
             </div>
+        </div>
+
+        <!-- Real-time Chat & Sticker Panel -->
+        <div class="w-full lg:w-80 bg-white rounded-2xl shadow-md p-4 flex flex-col border border-slate-100 h-[560px] lg:h-auto">
+            <h3 class="text-sm font-bold text-slate-700 mb-2 pb-2 border-b border-slate-100 flex items-center justify-between">
+                <span>💬 Battle Chat & Stickers</span>
+                <span class="text-[10px] text-slate-400 font-normal">2 Opponents</span>
+            </h3>
+
+            <!-- Sticker Reaction Quick Buttons -->
+            <div class="mb-3">
+                <label class="text-[11px] font-semibold text-slate-500 block mb-1.5">Send Quick Reaction Sticker:</label>
+                <div class="grid grid-cols-4 gap-1.5">
+                    <button onclick="sendSticker('🔥')" class="text-lg bg-slate-50 hover:bg-amber-100 border border-slate-200 p-1.5 rounded-xl transition active:scale-95 shadow-sm">🔥</button>
+                    <button onclick="sendSticker('👍')" class="text-lg bg-slate-50 hover:bg-emerald-100 border border-slate-200 p-1.5 rounded-xl transition active:scale-95 shadow-sm">👍</button>
+                    <button onclick="sendSticker('✈️')" class="text-lg bg-slate-50 hover:bg-indigo-100 border border-slate-200 p-1.5 rounded-xl transition active:scale-95 shadow-sm">✈️</button>
+                    <button onclick="sendSticker('💥')" class="text-lg bg-slate-50 hover:bg-red-100 border border-slate-200 p-1.5 rounded-xl transition active:scale-95 shadow-sm">💥</button>
+                    <button onclick="sendSticker('🎯')" class="text-lg bg-slate-50 hover:bg-rose-100 border border-slate-200 p-1.5 rounded-xl transition active:scale-95 shadow-sm">🎯</button>
+                    <button onclick="sendSticker('😂')" class="text-lg bg-slate-50 hover:bg-yellow-100 border border-slate-200 p-1.5 rounded-xl transition active:scale-95 shadow-sm">😂</button>
+                    <button onclick="sendSticker('💩')" class="text-lg bg-slate-50 hover:bg-amber-100 border border-slate-200 p-1.5 rounded-xl transition active:scale-95 shadow-sm">💩</button>
+                    <button onclick="sendSticker('🏆')" class="text-lg bg-slate-50 hover:bg-yellow-200 border border-slate-200 p-1.5 rounded-xl transition active:scale-95 shadow-sm">🏆</button>
+                </div>
+            </div>
+
+            <!-- Messages Stream -->
+            <div id="chat-messages" class="flex-grow bg-slate-50 rounded-xl p-3 border border-slate-200 overflow-y-auto text-xs space-y-2 mb-3 chat-scroll">
+                <div class="text-center text-slate-400 text-[11px] my-1">--- Battle Chat Room ---</div>
+            </div>
+
+            <!-- Chat Input Box -->
+            <form onsubmit="handleSendChat(event)" class="flex gap-1.5">
+                <input id="chat-input" type="text" placeholder="Type a message..." class="flex-grow px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button type="submit" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition">
+                    Send
+                </button>
+            </form>
         </div>
 
     </main>
@@ -206,10 +271,11 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Game Configuration
+        // Game Grid Parameters
         const COLS = 15;
         const ROWS = 20;
         const CELL_SIZE = 32;
+        const MID_ROW = 10; // Red side = 0..9, Blue side = 10..20
 
         let canvas, ctx;
         let soundEnabled = true;
@@ -218,6 +284,7 @@
         let currentRoomId = null;
         let roomDocRef = null;
         let unsubscribeRoom = null;
+        let lastProcessedStickerId = null;
 
         // Tone.js Audio Setup
         let synth, noiseSynth;
@@ -247,6 +314,7 @@
                 else if (type === 'clash') noiseSynth?.triggerAttackRelease('8n');
                 else if (type === 'hit') noiseSynth?.triggerAttackRelease('4n');
                 else if (type === 'error') synth?.triggerAttackRelease('G2', '8n');
+                else if (type === 'chat') synth?.triggerAttackRelease('G4', '16n');
             } catch (e) { console.log("Audio Error", e); }
         };
 
@@ -267,7 +335,8 @@
             currentPath: [],
             planes: [],
             lines: [],
-            clashPoints: []
+            clashPoints: [],
+            chatMessages: []
         };
 
         function getDefaultPlanes() {
@@ -360,6 +429,8 @@
                 remainingSteps: 0,
                 planes: getDefaultPlanes(),
                 lines: [],
+                chatMessages: [],
+                lastSticker: null,
                 lastMove: null
             };
 
@@ -434,6 +505,12 @@
                 gameState.remainingSteps = data.remainingSteps;
                 gameState.planes = data.planes || [];
                 gameState.lines = data.lines || [];
+                gameState.chatMessages = data.chatMessages || [];
+
+                if (data.lastSticker && data.lastSticker.id !== lastProcessedStickerId) {
+                    lastProcessedStickerId = data.lastSticker.id;
+                    displayAnimatedSticker(data.lastSticker.emoji, data.lastSticker.senderRole);
+                }
 
                 if (data.lastExplosion) {
                     triggerExplosion(data.lastExplosion.x, data.lastExplosion.y, data.lastExplosion.color);
@@ -444,7 +521,110 @@
                 }
 
                 updateUI();
+                renderChatMessages();
             });
+        }
+
+        // Chat & Stickers implementation
+        window.handleSendChat = async function(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || !roomDocRef) return;
+
+            input.value = '';
+            const newMsg = {
+                sender: myRole,
+                text: text,
+                timestamp: Date.now()
+            };
+
+            const updatedMsgs = [...(gameState.chatMessages || []), newMsg];
+            try {
+                await updateDoc(roomDocRef, { chatMessages: updatedMsgs });
+                window.playSound('chat');
+            } catch (err) {
+                console.error("Chat send error:", err);
+            }
+        };
+
+        window.sendSticker = async function(emoji) {
+            if (!roomDocRef) return;
+            const stickerObj = {
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                emoji: emoji,
+                senderRole: myRole
+            };
+
+            const chatText = `[Sticker ${emoji}]`;
+            const updatedMsgs = [...(gameState.chatMessages || []), {
+                sender: myRole,
+                text: chatText,
+                timestamp: Date.now()
+            }];
+
+            try {
+                await updateDoc(roomDocRef, {
+                    lastSticker: stickerObj,
+                    chatMessages: updatedMsgs
+                });
+                window.playSound('chat');
+            } catch (err) {
+                console.error("Sticker send error:", err);
+            }
+        };
+
+        function displayAnimatedSticker(emoji, senderRole) {
+            const container = document.getElementById('sticker-layer');
+            const stickerEl = document.createElement('div');
+            stickerEl.className = 'floating-sticker absolute text-6xl shadow-2xl z-30 select-none filter drop-shadow-lg';
+            
+            // Position sticker near top if red, bottom if blue
+            if (senderRole === 'red') {
+                stickerEl.style.top = '25%';
+            } else {
+                stickerEl.style.top = '65%';
+            }
+            stickerEl.style.left = `${30 + Math.random() * 40}%`;
+            stickerEl.innerText = emoji;
+
+            container.appendChild(stickerEl);
+            window.playSound('chat');
+
+            setTimeout(() => {
+                if (stickerEl.parentNode) {
+                    stickerEl.parentNode.removeChild(stickerEl);
+                }
+            }, 2300);
+        }
+
+        function renderChatMessages() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '<div class="text-center text-slate-400 text-[10px] my-1">--- Battle Chat Room ---</div>';
+
+            gameState.chatMessages.forEach(msg => {
+                const msgEl = document.createElement('div');
+                const isMe = msg.sender === myRole;
+                const senderColor = msg.sender === 'red' ? 'text-red-600' : 'text-blue-600';
+                const roleLabel = msg.sender ? msg.sender.toUpperCase() : 'PLAYER';
+
+                if (isMe) {
+                    msgEl.className = 'text-right my-1';
+                    msgEl.innerHTML = `<span class="inline-block bg-indigo-600 text-white rounded-xl px-3 py-1.5 max-w-[85%] text-left shadow-sm">${escapeHtml(msg.text)}</span>`;
+                } else {
+                    msgEl.className = 'text-left my-1';
+                    msgEl.innerHTML = `
+                        <span class="block text-[9px] font-bold ${senderColor}">${roleLabel}</span>
+                        <span class="inline-block bg-white border border-slate-200 text-slate-800 rounded-xl px-3 py-1.5 max-w-[85%] text-left shadow-sm">${escapeHtml(msg.text)}</span>
+                    `;
+                }
+                container.appendChild(msgEl);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
         function showGameOverModal(winnerRole) {
@@ -493,10 +673,10 @@
 
             if (myRole === 'red') {
                 badge.className = 'px-3 py-1.5 bg-red-500 text-white text-xs font-bold rounded-xl shadow';
-                badge.innerText = "You: RED Player (Top)";
+                badge.innerText = "You: RED Player (Top Half)";
             } else if (myRole === 'blue') {
                 badge.className = 'px-3 py-1.5 bg-blue-500 text-white text-xs font-bold rounded-xl shadow';
-                badge.innerText = "You: BLUE Player (Bottom)";
+                badge.innerText = "You: BLUE Player (Bottom Half)";
             }
         }
 
@@ -507,10 +687,10 @@
             const msgBox = document.getElementById('game-message');
 
             if (gameState.turn === 'red') {
-                badge.className = 'text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider bg-red-100 text-red-600';
+                badge.className = 'text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-red-100 text-red-600';
                 badge.innerText = "Red's Turn";
             } else {
-                badge.className = 'text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider bg-blue-100 text-blue-600';
+                badge.className = 'text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-blue-100 text-blue-600';
                 badge.innerText = "Blue's Turn";
             }
 
@@ -541,7 +721,7 @@
                     if (!gameState.selectedPlaneId) {
                         msgBox.innerText = `Dice rolled: ${gameState.diceValue}. Click one of your planes to move!`;
                     } else {
-                        msgBox.innerText = `Steps remaining: ${gameState.remainingSteps}. Click adjacent points. Clash requires EXACT step match!`;
+                        msgBox.innerText = `Steps left: ${gameState.remainingSteps}. Move within your side! Clash requires EXACT step match!`;
                     }
                 }
             }
@@ -623,6 +803,20 @@
 
             if (gridX < 0 || gridX > COLS || gridY < 0 || gridY > ROWS) return;
 
+            // Enforce Movement Side Restrictions
+            // Red: Top Half (y: 0 to MID_ROW)
+            // Blue: Bottom Half (y: MID_ROW to ROWS)
+            if (myRole === 'red' && gridY > MID_ROW) {
+                window.playSound('error');
+                window.showNotification("Side Boundary Restricted!", "Red planes can only move inside the TOP half (Rows 0-10).", "error");
+                return;
+            }
+            if (myRole === 'blue' && gridY < MID_ROW) {
+                window.playSound('error');
+                window.showNotification("Side Boundary Restricted!", "Blue planes can only move inside the BOTTOM half (Rows 10-20).", "error");
+                return;
+            }
+
             if (!gameState.selectedPlaneId) {
                 const clickedPlane = gameState.planes.find(p => p.player === gameState.turn && p.active && p.x === gridX && p.y === gridY);
                 if (clickedPlane) {
@@ -631,7 +825,7 @@
                     window.playSound('step');
                     updateUI();
                 } else {
-                    window.showNotification("Selection Error", "Please click on one of your active airplanes.", "error");
+                    window.showNotification("Selection Error", "Please click on one of your active airplanes on your side.", "error");
                 }
                 return;
             }
@@ -785,6 +979,16 @@
         function drawBoard() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Draw Background Zone Shading
+            // Top Zone (Red Area)
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.03)';
+            ctx.fillRect(0, 0, canvas.width, MID_ROW * CELL_SIZE);
+
+            // Bottom Zone (Blue Area)
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.03)';
+            ctx.fillRect(0, MID_ROW * CELL_SIZE, canvas.width, (ROWS - MID_ROW) * CELL_SIZE);
+
+            // Grid Lines
             ctx.strokeStyle = '#e2e8f0';
             ctx.lineWidth = 1;
 
@@ -802,6 +1006,17 @@
                 ctx.stroke();
             }
 
+            // CENTER BOUNDARY DIVIDER LINE (Side Restriction Border)
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([8, 6]);
+            ctx.beginPath();
+            ctx.moveTo(0, MID_ROW * CELL_SIZE);
+            ctx.lineTo(canvas.width, MID_ROW * CELL_SIZE);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw Grid Dots
             ctx.fillStyle = '#cbd5e1';
             for (let x = 0; x <= COLS; x++) {
                 for (let y = 0; y <= ROWS; y++) {
@@ -811,6 +1026,7 @@
                 }
             }
 
+            // Valid Step Guidance Indicators (restricted by active player's side)
             if (gameState.selectedPlaneId && gameState.remainingSteps > 0 && gameState.currentPath.length > 0) {
                 const head = gameState.currentPath[gameState.currentPath.length - 1];
                 for (let dx = -1; dx <= 1; dx++) {
@@ -818,7 +1034,11 @@
                         if (dx === 0 && dy === 0) continue;
                         const nx = head.x + dx;
                         const ny = head.y + dy;
-                        if (nx >= 0 && nx <= COLS && ny >= 0 && ny <= ROWS) {
+
+                        // Check Grid Bounds & Side Boundary Restrictions
+                        const isValidSide = (myRole === 'red' && ny <= MID_ROW) || (myRole === 'blue' && ny >= MID_ROW);
+
+                        if (nx >= 0 && nx <= COLS && ny >= 0 && ny <= ROWS && isValidSide) {
                             const causesClash = isClashPoint(head, { x: nx, y: ny });
                             ctx.beginPath();
                             ctx.arc(nx * CELL_SIZE, ny * CELL_SIZE, 5, 0, Math.PI * 2);
@@ -833,6 +1053,7 @@
                 }
             }
 
+            // Draw Bullet / Travel Lines
             gameState.lines.forEach(line => {
                 ctx.strokeStyle = line.color;
                 ctx.lineWidth = 3;
@@ -842,6 +1063,7 @@
                 ctx.stroke();
             });
 
+            // Active Path Move Animation Preview
             if (gameState.currentPath.length > 1) {
                 ctx.strokeStyle = gameState.turn === 'red' ? '#ef4444' : '#3b82f6';
                 ctx.lineWidth = 4;
@@ -855,6 +1077,7 @@
                 ctx.setLineDash([]);
             }
 
+            // Explosion Particles
             gameState.clashPoints.forEach(p => {
                 ctx.save();
                 ctx.globalAlpha = Math.max(0, p.life);
@@ -865,6 +1088,7 @@
                 ctx.restore();
             });
 
+            // Draw Airplanes
             gameState.planes.forEach(plane => {
                 if (!plane.active) return;
                 const px = plane.x * CELL_SIZE;
