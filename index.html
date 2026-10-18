@@ -431,12 +431,16 @@
         async function initAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    const userCred = await signInWithCustomToken(auth, __initial_auth_token);
-                    currentUser = userCred.user;
-                } else {
-                    const userCred = await signInAnonymously(auth);
-                    currentUser = userCred.user;
+                    try {
+                        const userCred = await signInWithCustomToken(auth, __initial_auth_token);
+                        currentUser = userCred.user;
+                        return;
+                    } catch (customTokenError) {
+                        console.warn("Custom token authentication failed, falling back to anonymous auth:", customTokenError);
+                    }
                 }
+                const userCred = await signInAnonymously(auth);
+                currentUser = userCred.user;
             } catch (err) {
                 console.error("Auth initialization failed:", err);
             }
