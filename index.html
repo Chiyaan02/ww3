@@ -107,12 +107,12 @@
                 <!-- Fleet Stats -->
                 <div class="grid grid-cols-2 gap-2 mb-4">
                     <div id="red-stat-card" class="bg-red-50 border border-red-100 p-2.5 rounded-xl text-center">
-                        <span class="block text-[10px] font-semibold text-red-500 uppercase">Red (Top Half)</span>
+                        <span id="red-name-display" class="block text-[10px] font-semibold text-red-500 uppercase truncate">Red Player</span>
                         <span id="red-planes-count" class="text-xl font-bold text-red-600">3</span>
                         <span class="text-[10px] text-slate-400 block">Planes Left</span>
                     </div>
                     <div id="blue-stat-card" class="bg-blue-50 border border-blue-100 p-2.5 rounded-xl text-center">
-                        <span class="block text-[10px] font-semibold text-blue-500 uppercase">Blue (Bottom Half)</span>
+                        <span id="blue-name-display" class="block text-[10px] font-semibold text-blue-500 uppercase truncate">Blue Player</span>
                         <span id="blue-planes-count" class="text-xl font-bold text-blue-600">3</span>
                         <span class="text-[10px] text-slate-400 block">Planes Left</span>
                     </div>
@@ -150,7 +150,7 @@
             </div>
             
             <div class="mt-2 flex items-center justify-between w-full text-xs text-slate-400 px-2">
-                <span>🛡️ Red: Top Zone (Rows 0-9) | Blue: Bottom Zone (Rows 10-20)</span>
+                <span>🛡️ Full Open Battle Grid (No Boundary Split)</span>
                 <span id="sync-status" class="text-emerald-600 font-semibold flex items-center gap-1">🟢 Connected</span>
             </div>
         </div>
@@ -200,7 +200,13 @@
                 ✈️
             </div>
             <h2 class="text-2xl font-bold text-slate-800 mb-1">Paper Airplane Online</h2>
-            <p class="text-xs text-slate-500 mb-6">Play 2-player real-time grid combat with friends!</p>
+            <p class="text-xs text-slate-500 mb-5">Play 2-player real-time grid combat with friends!</p>
+
+            <!-- Name Input Field -->
+            <div class="mb-4 text-left">
+                <label class="text-xs font-bold text-slate-700 block mb-1">Your Name / Callsign:</label>
+                <input id="player-name-input" type="text" maxlength="15" placeholder="Enter your name..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
 
             <div class="space-y-4">
                 <button onclick="createRoom()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
@@ -275,12 +281,12 @@
         const COLS = 15;
         const ROWS = 20;
         const CELL_SIZE = 32;
-        const MID_ROW = 10; // Red side = 0..9, Blue side = 10..20
 
         let canvas, ctx;
         let soundEnabled = true;
         let currentUser = null;
         let myRole = null; // 'red' or 'blue'
+        let myName = 'Player';
         let currentRoomId = null;
         let roomDocRef = null;
         let unsubscribeRoom = null;
@@ -328,6 +334,8 @@
             status: 'waiting', // 'waiting', 'active', 'finished'
             turn: 'red',
             winner: null,
+            redName: 'Red Player',
+            blueName: 'Blue Player',
             diceRolled: false,
             diceValue: 0,
             remainingSteps: 0,
@@ -409,11 +417,17 @@
             window.showNotification("Copied!", `Room Code ${currentRoomId} copied to clipboard! Share it with Player 2.`, "success");
         };
 
+        function getEnteredPlayerName(defaultFallback) {
+            const inputVal = document.getElementById('player-name-input').value.trim();
+            return inputVal || defaultFallback;
+        }
+
         window.createRoom = async function() {
             if (!currentUser) await initAuth();
             const roomId = Math.floor(1000 + Math.random() * 9000).toString();
             currentRoomId = roomId;
             myRole = 'red';
+            myName = getEnteredPlayerName("Red Pilot");
 
             roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
 
@@ -421,6 +435,8 @@
                 roomId: roomId,
                 hostUid: currentUser.uid,
                 guestUid: null,
+                redName: myName,
+                blueName: 'Waiting...',
                 status: 'waiting',
                 turn: 'red',
                 winner: null,
@@ -475,8 +491,11 @@
                 }
 
                 myRole = 'blue';
+                myName = getEnteredPlayerName("Blue Pilot");
+
                 await updateDoc(roomDocRef, {
                     guestUid: currentUser.uid,
+                    blueName: myName,
                     status: 'active'
                 });
 
@@ -500,6 +519,8 @@
                 gameState.status = data.status;
                 gameState.turn = data.turn;
                 gameState.winner = data.winner;
+                gameState.redName = data.redName || 'Red Player';
+                gameState.blueName = data.blueName || 'Blue Player';
                 gameState.diceRolled = data.diceRolled;
                 gameState.diceValue = data.diceValue;
                 gameState.remainingSteps = data.remainingSteps;
@@ -520,6 +541,7 @@
                     showGameOverModal(gameState.winner);
                 }
 
+                updateRoleBadge();
                 updateUI();
                 renderChatMessages();
             });
@@ -533,9 +555,12 @@
             if (!text || !roomDocRef) return;
 
             input.value = '';
+            const senderName = myRole === 'red' ? gameState.redName : gameState.blueName;
             const newMsg = {
                 sender: myRole,
+                senderName: senderName,
                 text: text,
+                isSticker: false,
                 timestamp: Date.now()
             };
 
@@ -556,10 +581,13 @@
                 senderRole: myRole
             };
 
-            const chatText = `[Sticker ${emoji}]`;
+            const senderName = myRole === 'red' ? gameState.redName : gameState.blueName;
+
             const updatedMsgs = [...(gameState.chatMessages || []), {
                 sender: myRole,
-                text: chatText,
+                senderName: senderName,
+                text: emoji,
+                isSticker: true,
                 timestamp: Date.now()
             }];
 
@@ -579,7 +607,6 @@
             const stickerEl = document.createElement('div');
             stickerEl.className = 'floating-sticker absolute text-6xl shadow-2xl z-30 select-none filter drop-shadow-lg';
             
-            // Position sticker near top if red, bottom if blue
             if (senderRole === 'red') {
                 stickerEl.style.top = '25%';
             } else {
@@ -606,17 +633,29 @@
                 const msgEl = document.createElement('div');
                 const isMe = msg.sender === myRole;
                 const senderColor = msg.sender === 'red' ? 'text-red-600' : 'text-blue-600';
-                const roleLabel = msg.sender ? msg.sender.toUpperCase() : 'PLAYER';
+                
+                const displayName = msg.senderName || (msg.sender ? msg.sender.toUpperCase() : 'PLAYER');
 
                 if (isMe) {
                     msgEl.className = 'text-right my-1';
-                    msgEl.innerHTML = `<span class="inline-block bg-indigo-600 text-white rounded-xl px-3 py-1.5 max-w-[85%] text-left shadow-sm">${escapeHtml(msg.text)}</span>`;
+                    if (msg.isSticker) {
+                        msgEl.innerHTML = `<span class="inline-block text-3xl p-1 animate-bounce">${escapeHtml(msg.text)}</span>`;
+                    } else {
+                        msgEl.innerHTML = `<span class="inline-block bg-indigo-600 text-white rounded-xl px-3 py-1.5 max-w-[85%] text-left shadow-sm">${escapeHtml(msg.text)}</span>`;
+                    }
                 } else {
                     msgEl.className = 'text-left my-1';
-                    msgEl.innerHTML = `
-                        <span class="block text-[9px] font-bold ${senderColor}">${roleLabel}</span>
-                        <span class="inline-block bg-white border border-slate-200 text-slate-800 rounded-xl px-3 py-1.5 max-w-[85%] text-left shadow-sm">${escapeHtml(msg.text)}</span>
-                    `;
+                    if (msg.isSticker) {
+                        msgEl.innerHTML = `
+                            <span class="block text-[9px] font-bold ${senderColor}">${escapeHtml(displayName)}</span>
+                            <span class="inline-block text-3xl p-1 animate-bounce">${escapeHtml(msg.text)}</span>
+                        `;
+                    } else {
+                        msgEl.innerHTML = `
+                            <span class="block text-[9px] font-bold ${senderColor}">${escapeHtml(displayName)}</span>
+                            <span class="inline-block bg-white border border-slate-200 text-slate-800 rounded-xl px-3 py-1.5 max-w-[85%] text-left shadow-sm">${escapeHtml(msg.text)}</span>
+                        `;
+                    }
                 }
                 container.appendChild(msgEl);
             });
@@ -636,15 +675,16 @@
             modal.classList.remove('hidden');
 
             const isWinner = winnerRole === myRole;
+            const winnerName = winnerRole === 'red' ? gameState.redName : gameState.blueName;
 
             if (winnerRole === 'red') {
                 trophy.className = 'w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-xl animate-bounce';
                 title.innerText = isWinner ? "🎉 VICTORY! 🎉" : "💥 DEFEAT! 💥";
-                msg.innerText = isWinner ? "You destroyed all Blue Fleet airplanes!" : "Red Fleet destroyed all your airplanes!";
+                msg.innerText = isWinner ? `You (${winnerName}) destroyed all Blue Fleet airplanes!` : `${winnerName} (Red) destroyed all your airplanes!`;
             } else {
                 trophy.className = 'w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-xl animate-bounce';
                 title.innerText = isWinner ? "🎉 VICTORY! 🎉" : "💥 DEFEAT! 💥";
-                msg.innerText = isWinner ? "You destroyed all Red Fleet airplanes!" : "Blue Fleet destroyed all your airplanes!";
+                msg.innerText = isWinner ? `You (${winnerName}) destroyed all Red Fleet airplanes!` : `${winnerName} (Blue) destroyed all your airplanes!`;
             }
         }
 
@@ -671,13 +711,18 @@
 
             roomCodeBadge.classList.remove('hidden');
 
+            const displayName = myRole === 'red' ? gameState.redName : gameState.blueName;
+
             if (myRole === 'red') {
                 badge.className = 'px-3 py-1.5 bg-red-500 text-white text-xs font-bold rounded-xl shadow';
-                badge.innerText = "You: RED Player (Top Half)";
+                badge.innerText = `You: ${displayName} (RED)`;
             } else if (myRole === 'blue') {
                 badge.className = 'px-3 py-1.5 bg-blue-500 text-white text-xs font-bold rounded-xl shadow';
-                badge.innerText = "You: BLUE Player (Bottom Half)";
+                badge.innerText = `You: ${displayName} (BLUE)`;
             }
+
+            document.getElementById('red-name-display').innerText = gameState.redName || 'Red Player';
+            document.getElementById('blue-name-display').innerText = gameState.blueName || 'Blue Player';
         }
 
         function updateUI() {
@@ -686,12 +731,14 @@
             const diceBox = document.getElementById('dice-box');
             const msgBox = document.getElementById('game-message');
 
+            const currentTurnName = gameState.turn === 'red' ? gameState.redName : gameState.blueName;
+
             if (gameState.turn === 'red') {
                 badge.className = 'text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-red-100 text-red-600';
-                badge.innerText = "Red's Turn";
+                badge.innerText = `${gameState.redName}'s Turn`;
             } else {
                 badge.className = 'text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-blue-100 text-blue-600';
-                badge.innerText = "Blue's Turn";
+                badge.innerText = `${gameState.blueName}'s Turn`;
             }
 
             diceBox.innerText = gameState.diceValue > 0 ? gameState.diceValue : '-';
@@ -705,13 +752,13 @@
 
             if (gameState.status === 'finished') {
                 rollBtn.disabled = true;
-                msgBox.innerText = `Game Over! ${gameState.winner.toUpperCase()} player won the match!`;
+                msgBox.innerText = `Game Over! ${currentTurnName} won the match!`;
             } else if (gameState.status === 'waiting') {
                 rollBtn.disabled = true;
                 msgBox.innerText = `Waiting for Player 2 (Blue) to join using room code: ${currentRoomId}...`;
             } else if (!isMyTurn) {
                 rollBtn.disabled = true;
-                msgBox.innerText = `Waiting for opponent (${gameState.turn.toUpperCase()}) to make a move...`;
+                msgBox.innerText = `Waiting for opponent (${currentTurnName}) to make a move...`;
             } else {
                 if (!gameState.diceRolled) {
                     rollBtn.disabled = false;
@@ -721,7 +768,7 @@
                     if (!gameState.selectedPlaneId) {
                         msgBox.innerText = `Dice rolled: ${gameState.diceValue}. Click one of your planes to move!`;
                     } else {
-                        msgBox.innerText = `Steps left: ${gameState.remainingSteps}. Move within your side! Clash requires EXACT step match!`;
+                        msgBox.innerText = `Steps left: ${gameState.remainingSteps}. Clash requires EXACT step match!`;
                     }
                 }
             }
@@ -803,20 +850,6 @@
 
             if (gridX < 0 || gridX > COLS || gridY < 0 || gridY > ROWS) return;
 
-            // Enforce Movement Side Restrictions
-            // Red: Top Half (y: 0 to MID_ROW)
-            // Blue: Bottom Half (y: MID_ROW to ROWS)
-            if (myRole === 'red' && gridY > MID_ROW) {
-                window.playSound('error');
-                window.showNotification("Side Boundary Restricted!", "Red planes can only move inside the TOP half (Rows 0-10).", "error");
-                return;
-            }
-            if (myRole === 'blue' && gridY < MID_ROW) {
-                window.playSound('error');
-                window.showNotification("Side Boundary Restricted!", "Blue planes can only move inside the BOTTOM half (Rows 10-20).", "error");
-                return;
-            }
-
             if (!gameState.selectedPlaneId) {
                 const clickedPlane = gameState.planes.find(p => p.player === gameState.turn && p.active && p.x === gridX && p.y === gridY);
                 if (clickedPlane) {
@@ -825,7 +858,7 @@
                     window.playSound('step');
                     updateUI();
                 } else {
-                    window.showNotification("Selection Error", "Please click on one of your active airplanes on your side.", "error");
+                    window.showNotification("Selection Error", "Please click on one of your active airplanes to move.", "error");
                 }
                 return;
             }
@@ -979,14 +1012,9 @@
         function drawBoard() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Background Zone Shading
-            // Top Zone (Red Area)
-            ctx.fillStyle = 'rgba(239, 68, 68, 0.03)';
-            ctx.fillRect(0, 0, canvas.width, MID_ROW * CELL_SIZE);
-
-            // Bottom Zone (Blue Area)
-            ctx.fillStyle = 'rgba(59, 130, 246, 0.03)';
-            ctx.fillRect(0, MID_ROW * CELL_SIZE, canvas.width, (ROWS - MID_ROW) * CELL_SIZE);
+            // Open Single Field Grid Background
+            ctx.fillStyle = 'rgba(241, 245, 249, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Grid Lines
             ctx.strokeStyle = '#e2e8f0';
@@ -1006,16 +1034,6 @@
                 ctx.stroke();
             }
 
-            // CENTER BOUNDARY DIVIDER LINE (Side Restriction Border)
-            ctx.strokeStyle = '#8b5cf6';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([8, 6]);
-            ctx.beginPath();
-            ctx.moveTo(0, MID_ROW * CELL_SIZE);
-            ctx.lineTo(canvas.width, MID_ROW * CELL_SIZE);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
             // Draw Grid Dots
             ctx.fillStyle = '#cbd5e1';
             for (let x = 0; x <= COLS; x++) {
@@ -1026,7 +1044,7 @@
                 }
             }
 
-            // Valid Step Guidance Indicators (restricted by active player's side)
+            // Valid Step Guidance Indicators
             if (gameState.selectedPlaneId && gameState.remainingSteps > 0 && gameState.currentPath.length > 0) {
                 const head = gameState.currentPath[gameState.currentPath.length - 1];
                 for (let dx = -1; dx <= 1; dx++) {
@@ -1035,10 +1053,7 @@
                         const nx = head.x + dx;
                         const ny = head.y + dy;
 
-                        // Check Grid Bounds & Side Boundary Restrictions
-                        const isValidSide = (myRole === 'red' && ny <= MID_ROW) || (myRole === 'blue' && ny >= MID_ROW);
-
-                        if (nx >= 0 && nx <= COLS && ny >= 0 && ny <= ROWS && isValidSide) {
+                        if (nx >= 0 && nx <= COLS && ny >= 0 && ny <= ROWS) {
                             const causesClash = isClashPoint(head, { x: nx, y: ny });
                             ctx.beginPath();
                             ctx.arc(nx * CELL_SIZE, ny * CELL_SIZE, 5, 0, Math.PI * 2);
