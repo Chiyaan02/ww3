@@ -163,27 +163,6 @@
             <div id="canvas-container" class="w-full h-full overflow-auto flex justify-center items-center touch-pan-x touch-pan-y">
                 <canvas id="game-canvas" class="grid-paper rounded-xl shadow-2xl border border-slate-700 cursor-crosshair max-w-full"></canvas>
             </div>
-
-            <!-- On-Screen Touch Controls (Arrows) for Mobile -->
-            <div id="mobile-controls" class="w-full mt-3 flex flex-col items-center justify-center bg-slate-900/90 border border-indigo-500/30 p-2.5 rounded-2xl shadow-xl hidden">
-                <div class="text-[10px] font-bold text-cyan-400 mb-1 tracking-wider uppercase flex items-center gap-1">
-                    🎯 Tactical Flight Pad (Tap to Move)
-                </div>
-                <div class="grid grid-cols-3 gap-1.5 w-48">
-                    <!-- Row 1 -->
-                    <button onclick="moveDirection(-1, -1)" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-white font-bold text-sm active:scale-95 shadow">↖️</button>
-                    <button onclick="moveDirection(0, -1)" class="p-2 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 rounded-xl text-white font-bold text-lg active:scale-95 shadow">⬆️</button>
-                    <button onclick="moveDirection(1, -1)" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-white font-bold text-sm active:scale-95 shadow">↗️</button>
-                    <!-- Row 2 -->
-                    <button onclick="moveDirection(-1, 0)" class="p-2 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 rounded-xl text-white font-bold text-lg active:scale-95 shadow">⬅️</button>
-                    <button onclick="deselectPlane()" class="p-1 bg-red-900/80 hover:bg-red-800 border border-red-500 rounded-xl text-red-200 font-black text-[10px] active:scale-95 shadow flex items-center justify-center">❌ Cancel</button>
-                    <button onclick="moveDirection(1, 0)" class="p-2 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 rounded-xl text-white font-bold text-lg active:scale-95 shadow">➡️</button>
-                    <!-- Row 3 -->
-                    <button onclick="moveDirection(-1, 1)" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-white font-bold text-sm active:scale-95 shadow">↙️</button>
-                    <button onclick="moveDirection(0, 1)" class="p-2 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 rounded-xl text-white font-bold text-lg active:scale-95 shadow">⬇️</button>
-                    <button onclick="moveDirection(1, 1)" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-white font-bold text-sm active:scale-95 shadow">↘️</button>
-                </div>
-            </div>
             
             <div class="mt-2 flex items-center justify-between w-full text-[10px] md:text-xs text-slate-400 px-1">
                 <span>⚡ Classic Combat</span>
@@ -488,7 +467,7 @@
         function getDefaultPlanes(maxPlayers) {
             const planes = [];
 
-            // Red Fleet
+            // Red Fleet (Plane 2 has Shield)
             planes.push(
                 { id: 'r1', player: 'red', x: 2, y: 1, active: true, pClass: selectedClass, shielded: false },
                 { id: 'r2', player: 'red', x: 6, y: 1, active: true, pClass: 'armored', shielded: true },
@@ -496,7 +475,7 @@
                 { id: 'r4', player: 'red', x: 15, y: 1, active: true, pClass: selectedClass, shielded: false }
             );
 
-            // Blue Fleet
+            // Blue Fleet (Plane 2 has Shield, all 4 active/visible)
             planes.push(
                 { id: 'b1', player: 'blue', x: 2, y: 20, active: true, pClass: 'fighter', shielded: false },
                 { id: 'b2', player: 'blue', x: 6, y: 20, active: true, pClass: 'armored', shielded: true },
@@ -505,7 +484,7 @@
             );
 
             if (maxPlayers >= 3) {
-                // Green Fleet
+                // Green Fleet (Plane 2 has Shield)
                 planes.push(
                     { id: 'g1', player: 'green', x: 1, y: 3, active: true, pClass: 'fighter', shielded: false },
                     { id: 'g2', player: 'green', x: 1, y: 7, active: true, pClass: 'armored', shielded: true },
@@ -515,7 +494,7 @@
             }
 
             if (maxPlayers >= 4) {
-                // Yellow Fleet
+                // Yellow Fleet (Plane 2 has Shield)
                 planes.push(
                     { id: 'y1', player: 'yellow', x: 17, y: 3, active: true, pClass: 'fighter', shielded: false },
                     { id: 'y2', player: 'yellow', x: 17, y: 7, active: true, pClass: 'armored', shielded: true },
@@ -1039,7 +1018,6 @@
             const rollBtn = document.getElementById('roll-btn');
             const diceBox = document.getElementById('dice-box');
             const msgBox = document.getElementById('game-message');
-            const mobileControls = document.getElementById('mobile-controls');
 
             const currentTurnRole = gameState.turn;
             const currentTurnName = gameState.players[currentTurnRole]?.name || currentTurnRole.toUpperCase();
@@ -1056,13 +1034,6 @@
             });
 
             const isMyTurn = gameState.turn === myRole;
-
-            // Show mobile controls when a plane is selected and steps remain
-            if (isMyTurn && gameState.selectedPlaneId && gameState.remainingSteps > 0) {
-                mobileControls.classList.remove('hidden');
-            } else {
-                mobileControls.classList.add('hidden');
-            }
 
             if (gameState.status === 'finished') {
                 rollBtn.disabled = true;
@@ -1083,7 +1054,7 @@
                     if (!gameState.selectedPlaneId) {
                         msgBox.innerText = `Dice value: ${gameState.diceValue}. Tap one of your airplanes!`;
                     } else {
-                        msgBox.innerText = `Steps remaining: ${gameState.remainingSteps}. Tap adjacent grid dot OR use Flight Pad Arrows below!`;
+                        msgBox.innerText = `Steps remaining: ${gameState.remainingSteps}. Tap adjacent grid dot!`;
                     }
                 }
             }
@@ -1092,63 +1063,6 @@
                 triggerAITurn();
             }
         }
-
-        window.deselectPlane = function() {
-            gameState.selectedPlaneId = null;
-            gameState.currentPath = [];
-            gameState.remainingSteps = gameState.diceValue;
-            updateUI();
-        };
-
-        window.moveDirection = function(dx, dy) {
-            if (gameState.turn !== myRole || gameState.status !== 'active' || !gameState.selectedPlaneId || gameState.remainingSteps <= 0) {
-                return;
-            }
-
-            const currentHead = gameState.currentPath[gameState.currentPath.length - 1];
-            const targetX = currentHead.x + dx;
-            const targetY = currentHead.y + dy;
-
-            if (targetX < 0 || targetX > COLS || targetY < 0 || targetY > ROWS) {
-                window.playSound('error');
-                window.showNotification("Out of Bounds", "Cannot move outside map boundary.", "error");
-                return;
-            }
-
-            const alreadyVisited = gameState.currentPath.some(pt => pt.x === targetX && pt.y === targetY);
-            if (alreadyVisited) {
-                window.playSound('error');
-                window.showNotification("Invalid Move", "Cannot revisit same vertex.", "error");
-                return;
-            }
-
-            const destination = { x: targetX, y: targetY };
-            const causesClash = isClashPoint(currentHead, destination);
-
-            if (causesClash && gameState.remainingSteps > 1) {
-                window.playSound('error');
-                window.showNotification("Clash Blocked!", `Clash requires EXACT step match on final move.`, "error");
-                return;
-            }
-
-            window.playSound('step');
-            gameState.currentPath.push(destination);
-            gameState.remainingSteps--;
-
-            if (causesClash) {
-                checkStepClashAndCollisions(currentHead, destination);
-            }
-
-            if (gameState.remainingSteps === 0) {
-                if (isSinglePlayerMode) {
-                    commitMoveSinglePlayer(gameState.currentPath);
-                } else {
-                    commitMove();
-                }
-            } else {
-                updateUI();
-            }
-        };
 
         window.rollDice = async function() {
             if (gameState.turn !== myRole || gameState.diceRolled || gameState.status !== 'active') return;
@@ -1787,9 +1701,3 @@
     </script>
 </body>
 </html>
-```eof
-
-### செய்யப்பட்டுள்ள மாற்றங்கள்:
-1. **Tactical Flight Pad (On-Screen Touch Pad):** விமானத்தை மேப்பில் கிளிக் செய்தவுடன் மேப்பிற்கு கீழே D-pad/Directional controller தோன்றும்.
-2. **8 Directional Movement:** மேல், கீழ், இடது, வலது (`⬆️ ⬇️ ⬅️ ➡️`) மற்றும் சாய்வாக நகரக்கூடிய 4 மூலை பொத்தான்கள் (`↖️ ↗️ ↙️ ↘️`) சேர்க்கப்பட்டுள்ளன.
-3. **Cancel Button:** தவறுதலாக விமானத்தை தேர்ந்தெடுத்தால் ரத்து செய்ய நடுவில் **❌ Cancel** பொத்தான் கொடுக்கப்பட்டுள்ளது.
