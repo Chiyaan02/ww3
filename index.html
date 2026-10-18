@@ -72,7 +72,7 @@
             </div>
             <div>
                 <h1 class="text-base md:text-xl font-black bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 bg-clip-text text-transparent uppercase tracking-wider">Paper Airplane Warfare</h1>
-                <p class="text-[10px] md:text-xs text-slate-400">Arenas • Puzzle Mode • Match Stats & Combo Kills</p>
+                <p class="text-[10px] md:text-xs text-slate-400">Class Planes • Voice Lines • Multiplayer & AI</p>
             </div>
         </div>
 
@@ -143,11 +143,6 @@
                         Roll Flight Dice
                     </button>
                 </div>
-
-                <!-- Active Achievements / Combo Badge Area -->
-                <div id="achievement-toast" class="hidden p-2 bg-gradient-to-r from-amber-950 to-amber-900 border border-amber-500/50 rounded-xl text-amber-300 text-xs font-extrabold text-center mb-2 animate-bounce">
-                    🏆 <span id="achievement-toast-text">First Strike!</span>
-                </div>
             </div>
 
             <!-- Voice Line Callouts Banner -->
@@ -170,7 +165,7 @@
             </div>
             
             <div class="mt-2 flex items-center justify-between w-full text-[10px] md:text-xs text-slate-400 px-1">
-                <span id="arena-info-text">🗺️ Classic Arena</span>
+                <span>⚡ Classic Combat</span>
                 <span id="player-count-display" class="font-bold text-cyan-400">4-Player Tactical War</span>
             </div>
         </div>
@@ -219,31 +214,12 @@
                 🚀
             </div>
             <h2 class="text-2xl font-black bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent mb-1">Paper Airplane Warfare</h2>
-            <p class="text-xs text-slate-400 mb-3">Choose Map Arena, Plane Class & Game Mode!</p>
+            <p class="text-xs text-slate-400 mb-3">Choose Plane Class & Multiplayer Settings!</p>
 
             <!-- Name Input Field -->
             <div class="mb-3 text-left">
                 <label class="text-xs font-bold text-slate-300 block mb-1">Pilot Callsign / Name:</label>
                 <input id="player-name-input" type="text" maxlength="15" placeholder="Enter callsign..." class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
-            </div>
-
-            <!-- Map / Arena Selection -->
-            <div class="mb-3 text-left">
-                <label class="text-xs font-bold text-slate-300 block mb-1">Choose Arena (வரைபட மாறுபாடு):</label>
-                <div class="grid grid-cols-3 gap-2">
-                    <button type="button" onclick="selectArena('classic')" id="map-classic-btn" class="p-2 border-2 border-cyan-500 bg-cyan-950/50 rounded-xl text-center transition">
-                        <div class="text-xs font-black text-cyan-300">🗺️ Classic</div>
-                        <div class="text-[8px] text-slate-400">சாதாரண போர்டு</div>
-                    </button>
-                    <button type="button" onclick="selectArena('island')" id="map-island-btn" class="p-2 border-2 border-slate-700 bg-slate-800 rounded-xl text-center transition hover:bg-slate-700">
-                        <div class="text-xs font-black text-blue-300">🏝️ Island</div>
-                        <div class="text-[8px] text-slate-400">நீர்நிலை & பாலங்கள்</div>
-                    </button>
-                    <button type="button" onclick="selectArena('mountain')" id="map-mountain-btn" class="p-2 border-2 border-slate-700 bg-slate-800 rounded-xl text-center transition hover:bg-slate-700">
-                        <div class="text-xs font-black text-amber-300">⛰️ Mountain</div>
-                        <div class="text-[8px] text-slate-400">மலைத் தடைகள்</div>
-                    </button>
-                </div>
             </div>
 
             <!-- Airplane Class Selection -->
@@ -272,15 +248,11 @@
             </div>
 
             <div class="space-y-2.5">
-                <button onclick="startSinglePlayerGame()" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95 text-xs flex items-center justify-center gap-2">
+                <button onclick="startSinglePlayerGame()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95 text-xs flex items-center justify-center gap-2">
                     🤖 Single Player vs Tactical AI
                 </button>
 
-                <button onclick="startPuzzleMode()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95 text-xs flex items-center justify-center gap-2">
-                    🧩 Daily Puzzle Mode (3 Turns Challenge)
-                </button>
-
-                <button onclick="createRoom()" class="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95 text-xs flex items-center justify-center gap-2">
+                <button onclick="createRoom()" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95 text-xs flex items-center justify-center gap-2">
                     🌐 Create Multiplayer Room
                 </button>
 
@@ -342,40 +314,16 @@
         </div>
     </div>
 
-    <!-- GAME OVER & STATS MODAL -->
+    <!-- GAME OVER MODAL -->
     <div id="gameover-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl text-center border border-slate-700">
+        <div class="bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center border border-slate-700">
             <div id="winner-trophy" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-xl animate-bounce">
                 🏆
             </div>
             <h2 id="winner-title" class="text-xl font-black text-white mb-1">Game Finished!</h2>
-            <p id="winner-message" class="text-xs text-slate-300 mb-4 leading-relaxed">Winner details here...</p>
-
-            <!-- Match Statistics Card -->
-            <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-3 mb-4 text-left text-xs space-y-2">
-                <h4 class="font-extrabold text-cyan-400 border-b border-slate-800 pb-1 text-center">📊 Match Statistics & Achievements</h4>
-                <div class="grid grid-cols-2 gap-2 text-[11px]">
-                    <div class="bg-slate-900 p-2 rounded-xl">
-                        <span class="text-slate-400 block text-[9px]">First Strike Bonus:</span>
-                        <span id="stat-first-strike" class="font-bold text-amber-400">-</span>
-                    </div>
-                    <div class="bg-slate-900 p-2 rounded-xl">
-                        <span class="text-slate-400 block text-[9px]">Max Combo Kills:</span>
-                        <span id="stat-combo" class="font-bold text-emerald-400">0</span>
-                    </div>
-                    <div class="bg-slate-900 p-2 rounded-xl">
-                        <span class="text-slate-400 block text-[9px]">Total Lines Drawn:</span>
-                        <span id="stat-lines" class="font-bold text-indigo-400">0</span>
-                    </div>
-                    <div class="bg-slate-900 p-2 rounded-xl">
-                        <span class="text-slate-400 block text-[9px]">Total Kills:</span>
-                        <span id="stat-kills" class="font-bold text-rose-400">0</span>
-                    </div>
-                </div>
-            </div>
-
+            <p id="winner-message" class="text-xs text-slate-300 mb-5 leading-relaxed">Winner details here...</p>
             <button onclick="restartGame()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl text-xs shadow-lg transition transform active:scale-95 uppercase tracking-wider">
-                🔄 Play Again / Next Level
+                🔄 Play Again
             </button>
         </div>
     </div>
@@ -421,24 +369,13 @@
         let currentUser = null;
         let selectedMaxPlayers = 2;
         let selectedClass = 'fighter'; // 'fighter', 'armored'
-        let selectedArena = 'classic'; // 'classic', 'island', 'mountain'
         let isSinglePlayerMode = false;
-        let isPuzzleMode = false;
-        let puzzleTurnsLeft = 3;
         let myRole = 'red';
         let myName = 'Pilot';
         let currentRoomId = null;
         let roomDocRef = null;
         let unsubscribeRoom = null;
         let lastProcessedStickerId = null;
-
-        // Statistics & Achievements Tracking
-        let matchStats = {
-            firstStrikePlayer: null,
-            comboKills: {}, // { red: 0, blue: 0, ... }
-            totalKills: {},
-            totalLines: 0
-        };
 
         const PLAYER_ORDER = ['red', 'blue', 'green', 'yellow'];
         const PLAYER_COLORS = {
@@ -501,20 +438,6 @@
             document.getElementById('sound-btn').innerText = soundEnabled ? '🔊 Sound: On' : '🔇 Sound: Off';
         };
 
-        window.selectArena = function(arena) {
-            selectedArena = arena;
-            ['classic', 'island', 'mountain'].forEach(a => {
-                const btn = document.getElementById(`map-${a}-btn`);
-                if (btn) {
-                    if (a === arena) {
-                        btn.className = 'p-2 border-2 border-cyan-500 bg-cyan-950/50 rounded-xl text-center transition';
-                    } else {
-                        btn.className = 'p-2 border-2 border-slate-700 bg-slate-800 rounded-xl text-center transition hover:bg-slate-700';
-                    }
-                }
-            });
-        };
-
         window.selectPlaneClass = function(pClass) {
             selectedClass = pClass;
             ['fighter', 'armored'].forEach(c => {
@@ -541,48 +464,10 @@
             });
         };
 
-        function getArenaObstacles(arenaType) {
-            if (arenaType === 'mountain') {
-                return [
-                    { type: 'mountain', x: 4, y: 5 }, { type: 'mountain', x: 5, y: 5 },
-                    { type: 'mountain', x: 12, y: 5 }, { type: 'mountain', x: 13, y: 5 },
-                    { type: 'mountain', x: 8, y: 10 }, { type: 'mountain', x: 9, y: 10 }, { type: 'mountain', x: 10, y: 10 },
-                    { type: 'mountain', x: 4, y: 15 }, { type: 'mountain', x: 5, y: 15 },
-                    { type: 'mountain', x: 12, y: 15 }, { type: 'mountain', x: 13, y: 15 }
-                ];
-            } else if (arenaType === 'island') {
-                const waterAndBridges = [];
-                // Central Lake with 2 Bridges
-                for (let x = 3; x <= 14; x++) {
-                    for (let y = 9; y <= 12; y++) {
-                        // Keep (x: 6, y: 10-11) and (x: 11, y: 10-11) as bridges
-                        const isBridge = (x === 6 || x === 11) && (y >= 9 && y <= 12);
-                        if (!isBridge) {
-                            waterAndBridges.push({ type: 'water', x: x, y: y });
-                        } else {
-                            waterAndBridges.push({ type: 'bridge', x: x, y: y });
-                        }
-                    }
-                }
-                return waterAndBridges;
-            }
-            return [];
-        }
-
-        function isPointPassable(x, y) {
-            if (x < 0 || x > COLS || y < 0 || y > ROWS) return false;
-            const obstacles = getArenaObstacles(gameState.arena);
-            const obs = obstacles.find(o => o.x === x && o.y === y);
-            if (obs && (obs.type === 'mountain' || obs.type === 'water')) {
-                return false;
-            }
-            return true;
-        }
-
         function getDefaultPlanes(maxPlayers) {
             const planes = [];
 
-            // Red Fleet
+            // Red Fleet (Plane 2 has Shield)
             planes.push(
                 { id: 'r1', player: 'red', x: 2, y: 1, active: true, pClass: selectedClass, shielded: false },
                 { id: 'r2', player: 'red', x: 6, y: 1, active: true, pClass: 'armored', shielded: true },
@@ -590,7 +475,7 @@
                 { id: 'r4', player: 'red', x: 15, y: 1, active: true, pClass: selectedClass, shielded: false }
             );
 
-            // Blue Fleet
+            // Blue Fleet (Plane 2 has Shield, all 4 active/visible)
             planes.push(
                 { id: 'b1', player: 'blue', x: 2, y: 20, active: true, pClass: 'fighter', shielded: false },
                 { id: 'b2', player: 'blue', x: 6, y: 20, active: true, pClass: 'armored', shielded: true },
@@ -599,7 +484,7 @@
             );
 
             if (maxPlayers >= 3) {
-                // Green Fleet
+                // Green Fleet (Plane 2 has Shield)
                 planes.push(
                     { id: 'g1', player: 'green', x: 1, y: 3, active: true, pClass: 'fighter', shielded: false },
                     { id: 'g2', player: 'green', x: 1, y: 7, active: true, pClass: 'armored', shielded: true },
@@ -609,7 +494,7 @@
             }
 
             if (maxPlayers >= 4) {
-                // Yellow Fleet
+                // Yellow Fleet (Plane 2 has Shield)
                 planes.push(
                     { id: 'y1', player: 'yellow', x: 17, y: 3, active: true, pClass: 'fighter', shielded: false },
                     { id: 'y2', player: 'yellow', x: 17, y: 7, active: true, pClass: 'armored', shielded: true },
@@ -623,7 +508,6 @@
 
         let gameState = {
             maxPlayers: 2,
-            arena: 'classic',
             status: 'waiting',
             turn: 'red',
             winner: null,
@@ -725,26 +609,15 @@
             return inputVal || defaultFallback;
         }
 
-        function resetMatchStats() {
-            matchStats = {
-                firstStrikePlayer: null,
-                comboKills: { red: 0, blue: 0, green: 0, yellow: 0 },
-                totalKills: { red: 0, blue: 0, green: 0, yellow: 0 },
-                totalLines: 0
-            };
-        }
-
         window.startSinglePlayerGame = function() {
             if (unsubscribeRoom) {
                 unsubscribeRoom();
                 unsubscribeRoom = null;
             }
             isSinglePlayerMode = true;
-            isPuzzleMode = false;
             currentRoomId = 'SOLO';
             myRole = 'red';
             myName = getEnteredPlayerName("Commander (You)");
-            resetMatchStats();
 
             const activeRoles = PLAYER_ORDER.slice(0, selectedMaxPlayers);
             const playersObj = {};
@@ -758,7 +631,6 @@
 
             gameState = {
                 maxPlayers: selectedMaxPlayers,
-                arena: selectedArena,
                 status: 'active',
                 turn: 'red',
                 winner: null,
@@ -774,7 +646,7 @@
                 chatMessages: [{
                     sender: 'blue',
                     senderName: 'System',
-                    text: `Arena: ${selectedArena.toUpperCase()}. Eliminate enemy planes!`,
+                    text: `Class: ${selectedClass.toUpperCase()}. Eliminate enemy planes to win!`,
                     isSticker: false,
                     timestamp: Date.now()
                 }]
@@ -788,64 +660,9 @@
             triggerVoiceLine("Enemy Spotted!");
         };
 
-        window.startPuzzleMode = function() {
-            if (unsubscribeRoom) {
-                unsubscribeRoom();
-                unsubscribeRoom = null;
-            }
-            isSinglePlayerMode = true;
-            isPuzzleMode = true;
-            puzzleTurnsLeft = 3;
-            currentRoomId = 'PUZZLE';
-            myRole = 'red';
-            myName = getEnteredPlayerName("Tactical Master");
-            resetMatchStats();
-
-            // Set up custom 3-turn Puzzle Challenge Layout
-            gameState = {
-                maxPlayers: 2,
-                arena: 'mountain',
-                status: 'active',
-                turn: 'red',
-                winner: null,
-                players: {
-                    red: { name: myName, uid: 'human' },
-                    blue: { name: 'Target Drone', uid: 'bot_blue' }
-                },
-                diceRolled: false,
-                diceValue: 0,
-                remainingSteps: 0,
-                selectedPlaneId: null,
-                currentPath: [],
-                planes: [
-                    { id: 'r1', player: 'red', x: 2, y: 2, active: true, pClass: 'fighter', shielded: false },
-                    { id: 'b1', player: 'blue', x: 6, y: 6, active: true, pClass: 'fighter', shielded: false },
-                    { id: 'b2', player: 'blue', x: 12, y: 6, active: true, pClass: 'armored', shielded: true }
-                ],
-                lines: [],
-                clashPoints: [],
-                chatMessages: [{
-                    sender: 'blue',
-                    senderName: 'Puzzle System',
-                    text: `🧩 PUZZLE MODE: Destroy all enemy drones in ${puzzleTurnsLeft} turns!`,
-                    isSticker: false,
-                    timestamp: Date.now()
-                }]
-            };
-
-            document.getElementById('lobby-modal').classList.add('hidden');
-            document.getElementById('gameover-modal').classList.add('hidden');
-            updateRoleBadge();
-            updateUI();
-            renderChatMessages();
-            window.showNotification("🧩 Daily Puzzle Mode", `Destroy all 2 enemy planes within ${puzzleTurnsLeft} turns!`, "info");
-        };
-
         window.createRoom = async function() {
             if (!currentUser) await initAuth();
             isSinglePlayerMode = false;
-            isPuzzleMode = false;
-            resetMatchStats();
             const roomId = Math.floor(1000 + Math.random() * 9000).toString();
             currentRoomId = roomId;
             myRole = 'red';
@@ -856,7 +673,6 @@
             const initialRoomData = {
                 roomId: roomId,
                 maxPlayers: selectedMaxPlayers,
-                arena: selectedArena,
                 status: 'waiting',
                 turn: 'red',
                 winner: null,
@@ -898,8 +714,6 @@
             if (!currentUser) await initAuth();
 
             isSinglePlayerMode = false;
-            isPuzzleMode = false;
-            resetMatchStats();
             currentRoomId = input;
             roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', input);
 
@@ -972,7 +786,6 @@
                 const data = snap.data();
 
                 gameState.maxPlayers = data.maxPlayers || 2;
-                gameState.arena = data.arena || 'classic';
                 gameState.status = data.status;
                 gameState.turn = data.turn;
                 gameState.winner = data.winner;
@@ -1148,19 +961,7 @@
 
             trophy.className = `w-16 h-16 ${PLAYER_COLORS[winnerRole]?.bg || 'bg-cyan-500'} text-white rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-xl animate-bounce`;
             title.innerText = isWinner ? "🎉 VICTORY! 🎉" : "💥 DEFEAT! 💥";
-            
-            if (isPuzzleMode) {
-                msg.innerText = isWinner ? `Puzzle Cleared! You eliminated all enemy targets!` : `Puzzle Failed! Out of turns.`;
-            } else {
-                msg.innerText = isWinner ? `Outstanding Commander! You (${winnerName}) dominated the war zone!` : `${winnerName} (${winnerRole.toUpperCase()}) secured victory!`;
-            }
-
-            // Populate Statistics
-            const fsName = matchStats.firstStrikePlayer ? (gameState.players[matchStats.firstStrikePlayer]?.name || matchStats.firstStrikePlayer.toUpperCase()) : 'None';
-            document.getElementById('stat-first-strike').innerText = fsName;
-            document.getElementById('stat-combo').innerText = matchStats.comboKills[myRole] || 0;
-            document.getElementById('stat-lines').innerText = matchStats.totalLines;
-            document.getElementById('stat-kills').innerText = matchStats.totalKills[myRole] || 0;
+            msg.innerText = isWinner ? `Outstanding Commander! You (${winnerName}) dominated the war zone!` : `${winnerName} (${winnerRole.toUpperCase()}) secured victory!`;
 
             if (isWinner) triggerVoiceLine("Kaboom!");
             else triggerVoiceLine("Mayday!");
@@ -1168,11 +969,6 @@
 
         window.restartGame = async function() {
             document.getElementById('gameover-modal').classList.add('hidden');
-
-            if (isPuzzleMode) {
-                window.startPuzzleMode();
-                return;
-            }
 
             if (isSinglePlayerMode) {
                 window.startSinglePlayerGame();
@@ -1194,12 +990,9 @@
 
         function updateRoleBadge() {
             const badge = document.getElementById('role-badge');
-            document.getElementById('display-room-code').innerText = isSinglePlayerMode ? (isPuzzleMode ? 'PUZZLE' : 'SOLO') : currentRoomId;
+            document.getElementById('display-room-code').innerText = isSinglePlayerMode ? 'SOLO' : currentRoomId;
             document.getElementById('room-code-badge').classList.remove('hidden');
-            
-            const arenaNames = { classic: '🗺️ Classic', island: '🏝️ Island', mountain: '⛰️ Mountain' };
-            document.getElementById('arena-info-text').innerText = `${arenaNames[gameState.arena] || '🗺️ Classic'} Arena`;
-            document.getElementById('player-count-display').innerText = isPuzzleMode ? '🧩 Daily Puzzle Mode' : `${gameState.maxPlayers}-Player ${isSinglePlayerMode ? 'Single Player' : 'Online'}`;
+            document.getElementById('player-count-display').innerText = `${gameState.maxPlayers}-Player ${isSinglePlayerMode ? 'Single Player' : 'Online'}`;
 
             const displayName = gameState.players[myRole]?.name || 'Pilot';
 
@@ -1231,12 +1024,7 @@
 
             badge.style.backgroundColor = PLAYER_COLORS[currentTurnRole]?.primary + '30';
             badge.style.color = PLAYER_COLORS[currentTurnRole]?.primary;
-            
-            if (isPuzzleMode) {
-                badge.innerText = `Puzzle: ${puzzleTurnsLeft} Turns Left`;
-            } else {
-                badge.innerText = `${currentTurnName}'s Turn`;
-            }
+            badge.innerText = `${currentTurnName}'s Turn`;
 
             diceBox.innerText = gameState.diceValue > 0 ? gameState.diceValue : '-';
 
@@ -1271,7 +1059,7 @@
                 }
             }
 
-            if (isSinglePlayerMode && !isPuzzleMode && gameState.status === 'active' && gameState.turn !== myRole) {
+            if (isSinglePlayerMode && gameState.status === 'active' && gameState.turn !== myRole) {
                 triggerAITurn();
             }
         }
@@ -1361,8 +1149,6 @@
             gameState.selectedPlaneId = bestPlane.id;
             gameState.currentPath = [bestPath[0]];
 
-            let turnKillsCount = 0;
-
             let stepIdx = 1;
             const moveInterval = setInterval(() => {
                 if (stepIdx < bestPath.length) {
@@ -1374,15 +1160,14 @@
                     gameState.remainingSteps--;
 
                     if (isClashPoint(fromPt, toPt)) {
-                        const kills = checkStepClashAndCollisions(fromPt, toPt);
-                        turnKillsCount += kills;
+                        checkStepClashAndCollisions(fromPt, toPt);
                     }
 
                     stepIdx++;
                 } else {
                     clearInterval(moveInterval);
                     aiTurnInProgress = false;
-                    commitMoveSinglePlayer(gameState.currentPath, turnKillsCount);
+                    commitMoveSinglePlayer(gameState.currentPath);
                 }
             }, 250);
         }
@@ -1412,7 +1197,7 @@
                         const nx = curr.x + dx;
                         const ny = curr.y + dy;
 
-                        if (isPointPassable(nx, ny)) {
+                        if (nx >= 0 && nx <= COLS && ny >= 0 && ny <= ROWS) {
                             if (!path.some(pt => pt.x === nx && pt.y === ny)) {
                                 const causesClash = isClashPoint(curr, { x: nx, y: ny });
                                 const isFinal = (s === steps - 1);
@@ -1446,7 +1231,7 @@
                         const nx = curr.x + dx;
                         const ny = curr.y + dy;
 
-                        if (isPointPassable(nx, ny)) {
+                        if (nx >= 0 && nx <= COLS && ny >= 0 && ny <= ROWS) {
                             if (!path.some(pt => pt.x === nx && pt.y === ny)) {
                                 const causesClash = isClashPoint(curr, { x: nx, y: ny });
                                 const isFinal = (s === steps - 1);
@@ -1499,8 +1284,6 @@
             return false;
         }
 
-        let playerTurnKills = 0;
-
         function handleCanvasInteraction(event) {
             if (gameState.turn !== myRole || gameState.status !== 'active') return;
 
@@ -1516,17 +1299,13 @@
             const gridX = Math.round(clickX / CELL_SIZE);
             const gridY = Math.round(clickY / CELL_SIZE);
 
-            if (!isPointPassable(gridX, gridY)) {
-                window.showNotification("Impassable Area", "Cannot fly into obstacles or water!", "error");
-                return;
-            }
+            if (gridX < 0 || gridX > COLS || gridY < 0 || gridY > ROWS) return;
 
             if (!gameState.selectedPlaneId) {
                 const clickedPlane = gameState.planes.find(p => p.player === gameState.turn && p.active && p.x === gridX && p.y === gridY);
                 if (clickedPlane) {
                     gameState.selectedPlaneId = clickedPlane.id;
                     gameState.currentPath = [{ x: clickedPlane.x, y: clickedPlane.y }];
-                    playerTurnKills = 0;
                     window.playSound('step');
                     updateUI();
                 } else {
@@ -1562,15 +1341,14 @@
                 gameState.remainingSteps--;
 
                 if (causesClash) {
-                    const kCount = checkStepClashAndCollisions(currentHead, destination);
-                    playerTurnKills += kCount;
+                    checkStepClashAndCollisions(currentHead, destination);
                 }
 
                 if (gameState.remainingSteps === 0) {
                     if (isSinglePlayerMode) {
-                        commitMoveSinglePlayer(gameState.currentPath, playerTurnKills);
+                        commitMoveSinglePlayer(gameState.currentPath);
                     } else {
-                        commitMove(playerTurnKills);
+                        commitMove();
                     }
                 } else {
                     updateUI();
@@ -1586,7 +1364,6 @@
         }
 
         function checkStepClashAndCollisions(fromPt, toPt) {
-            let killsInThisStep = 0;
             gameState.planes.forEach(plane => {
                 if (plane.player !== gameState.turn && plane.active) {
                     if (plane.x === toPt.x && plane.y === toPt.y) {
@@ -1595,18 +1372,9 @@
                             window.showNotification("🛡️ Shield Broke!", "Rival shield absorbed attack!", "info");
                         } else {
                             plane.active = false;
-                            killsInThisStep++;
                             window.playSound('hit');
                             triggerVoiceLine("Kaboom!");
                             triggerExplosion(toPt.x, toPt.y, '#ef4444');
-
-                            // Award First Strike Achievement
-                            if (!matchStats.firstStrikePlayer) {
-                                matchStats.firstStrikePlayer = gameState.turn;
-                                showAchievementToast("🏆 First Strike Bonus!");
-                            }
-
-                            matchStats.totalKills[gameState.turn] = (matchStats.totalKills[gameState.turn] || 0) + 1;
                         }
                     }
                 }
@@ -1625,14 +1393,6 @@
                     }
                 }
             }
-            return killsInThisStep;
-        }
-
-        function showAchievementToast(text) {
-            const toast = document.getElementById('achievement-toast');
-            document.getElementById('achievement-toast-text').innerText = text;
-            toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000);
         }
 
         function getNextTurnRole(current) {
@@ -1648,13 +1408,8 @@
             return current;
         }
 
-        function commitMoveSinglePlayer(path, turnKills = 0) {
+        function commitMoveSinglePlayer(path) {
             const playerColor = PLAYER_COLORS[gameState.turn]?.primary || '#6366f1';
-
-            if (turnKills >= 2) {
-                matchStats.comboKills[gameState.turn] = (matchStats.comboKills[gameState.turn] || 0) + 1;
-                showAchievementToast(`⚡ DOUBLE KILL COMBO! (+${turnKills} Kills)`);
-            }
 
             for (let i = 0; i < path.length - 1; i++) {
                 gameState.lines.push({
@@ -1663,7 +1418,6 @@
                     color: playerColor,
                     player: gameState.turn
                 });
-                matchStats.totalLines++;
             }
 
             if (path.length > 0) {
@@ -1677,31 +1431,17 @@
                 triggerExplosion(finalPt.x, finalPt.y, playerColor);
             }
 
-            if (isPuzzleMode) {
-                puzzleTurnsLeft--;
-                const remainingEnemies = gameState.planes.filter(p => p.player !== 'red' && p.active).length;
-                if (remainingEnemies === 0) {
-                    gameState.winner = 'red';
-                    gameState.status = 'finished';
-                    showGameOverModal('red');
-                } else if (puzzleTurnsLeft <= 0) {
-                    gameState.winner = 'blue';
-                    gameState.status = 'finished';
-                    showGameOverModal('blue');
-                }
-            } else {
-                const activeRoles = PLAYER_ORDER.slice(0, gameState.maxPlayers);
-                const survivingRoles = activeRoles.filter(role => 
-                    gameState.planes.some(p => p.player === role && p.active)
-                );
+            const activeRoles = PLAYER_ORDER.slice(0, gameState.maxPlayers);
+            const survivingRoles = activeRoles.filter(role => 
+                gameState.planes.some(p => p.player === role && p.active)
+            );
 
-                if (survivingRoles.length === 1) {
-                    gameState.winner = survivingRoles[0];
-                    gameState.status = 'finished';
-                    showGameOverModal(gameState.winner);
-                } else {
-                    gameState.turn = getNextTurnRole(gameState.turn);
-                }
+            if (survivingRoles.length === 1) {
+                gameState.winner = survivingRoles[0];
+                gameState.status = 'finished';
+                showGameOverModal(gameState.winner);
+            } else {
+                gameState.turn = getNextTurnRole(gameState.turn);
             }
 
             gameState.selectedPlaneId = null;
@@ -1713,14 +1453,9 @@
             updateUI();
         }
 
-        async function commitMove(turnKills = 0) {
+        async function commitMove() {
             const playerColor = PLAYER_COLORS[gameState.turn]?.primary || '#6366f1';
             const updatedLines = [...gameState.lines];
-
-            if (turnKills >= 2) {
-                matchStats.comboKills[gameState.turn] = (matchStats.comboKills[gameState.turn] || 0) + 1;
-                showAchievementToast(`⚡ DOUBLE KILL COMBO! (+${turnKills} Kills)`);
-            }
 
             for (let i = 0; i < gameState.currentPath.length - 1; i++) {
                 updatedLines.push({
@@ -1729,7 +1464,6 @@
                     color: playerColor,
                     player: gameState.turn
                 });
-                matchStats.totalLines++;
             }
 
             const finalPt = gameState.currentPath[gameState.currentPath.length - 1];
@@ -1790,48 +1524,9 @@
         function drawBoard() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Base Grid Background
+            // Grid Background
             ctx.fillStyle = '#0f172a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw Arenas / Maps (Island & Mountain)
-            const obstacles = getArenaObstacles(gameState.arena);
-            obstacles.forEach(obs => {
-                const ox = obs.x * CELL_SIZE;
-                const oy = obs.y * CELL_SIZE;
-
-                if (obs.type === 'mountain') {
-                    ctx.fillStyle = '#475569';
-                    ctx.beginPath();
-                    ctx.arc(ox, oy, CELL_SIZE * 0.45, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.strokeStyle = '#64748b';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-
-                    // Mountain Peak Symbol
-                    ctx.fillStyle = '#94a3b8';
-                    ctx.beginPath();
-                    ctx.moveTo(ox, oy - CELL_SIZE * 0.3);
-                    ctx.lineTo(ox - CELL_SIZE * 0.25, oy + CELL_SIZE * 0.25);
-                    ctx.lineTo(ox + CELL_SIZE * 0.25, oy + CELL_SIZE * 0.25);
-                    ctx.closePath();
-                    ctx.fill();
-                } else if (obs.type === 'water') {
-                    ctx.fillStyle = '#0284c7';
-                    ctx.fillRect(ox - CELL_SIZE / 2, oy - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
-                    ctx.fillStyle = '#0369a1';
-                    ctx.beginPath();
-                    ctx.arc(ox, oy, CELL_SIZE * 0.2, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (obs.type === 'bridge') {
-                    ctx.fillStyle = '#78350f';
-                    ctx.fillRect(ox - CELL_SIZE / 2 + 2, oy - CELL_SIZE / 2 + 2, CELL_SIZE - 4, CELL_SIZE - 4);
-                    ctx.strokeStyle = '#d97706';
-                    ctx.lineWidth = 1.5;
-                    ctx.strokeRect(ox - CELL_SIZE / 2 + 2, oy - CELL_SIZE / 2 + 2, CELL_SIZE - 4, CELL_SIZE - 4);
-                }
-            });
 
             // Grid Lines
             ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
@@ -1852,14 +1547,12 @@
             }
 
             // Grid Dots
+            ctx.fillStyle = '#475569';
             for (let x = 0; x <= COLS; x++) {
                 for (let y = 0; y <= ROWS; y++) {
-                    if (isPointPassable(x, y)) {
-                        ctx.fillStyle = '#475569';
-                        ctx.beginPath();
-                        ctx.arc(x * CELL_SIZE, y * CELL_SIZE, 2, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
+                    ctx.beginPath();
+                    ctx.arc(x * CELL_SIZE, y * CELL_SIZE, 2, 0, Math.PI * 2);
+                    ctx.fill();
                 }
             }
 
@@ -1872,7 +1565,7 @@
                         const nx = head.x + dx;
                         const ny = head.y + dy;
 
-                        if (isPointPassable(nx, ny)) {
+                        if (nx >= 0 && nx <= COLS && ny >= 0 && ny <= ROWS) {
                             const causesClash = isClashPoint(head, { x: nx, y: ny });
                             ctx.beginPath();
                             ctx.arc(nx * CELL_SIZE, ny * CELL_SIZE, 4, 0, Math.PI * 2);
