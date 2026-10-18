@@ -2,8 +2,8 @@
 <html lang="ta">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paper Airplane Combat - Online 2 Player</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Paper Airplane Combat - 2, 3 or 4 Players Online</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
@@ -26,15 +26,16 @@
 
         @keyframes dice-roll {
             0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.2); }
+            25% { transform: rotate(90deg) scale(1.1); }
+            50% { transform: rotate(180deg) scale(0.9); }
+            75% { transform: rotate(270deg) scale(1.1); }
             100% { transform: rotate(360deg) scale(1); }
         }
 
         .rolling {
-            animation: dice-roll 0.4s ease-in-out;
+            animation: dice-roll 0.5s ease-in-out;
         }
 
-        /* Floating Sticker Animation */
         @keyframes pop-float {
             0% { transform: scale(0.3) translateY(20px); opacity: 0; }
             30% { transform: scale(1.3) translateY(-10px); opacity: 1; }
@@ -59,72 +60,79 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-between p-2 sm:p-4 text-slate-800">
+<body class="min-h-screen flex flex-col items-center justify-between p-2 md:p-4 text-slate-800 select-none">
 
-    <!-- Header Header -->
-    <header class="w-full max-w-6xl bg-white shadow-md rounded-2xl p-3 sm:p-4 mb-3 flex flex-row justify-between items-center border border-slate-100 gap-2">
-        <div class="flex items-center space-x-2 sm:space-x-3">
-            <div class="bg-indigo-600 text-white p-2 sm:p-2.5 rounded-xl shadow-md">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <!-- Top Header -->
+    <header class="w-full max-w-6xl bg-white shadow-md rounded-2xl p-3 md:p-4 mb-2 flex flex-wrap justify-between items-center border border-slate-100 gap-2">
+        <div class="flex items-center space-x-2.5">
+            <div class="bg-indigo-600 text-white p-2 rounded-xl shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
             </div>
             <div>
-                <h1 class="text-sm sm:text-lg font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Airplane Battle</h1>
-                <p class="text-[10px] sm:text-xs text-slate-500">Online 2-Player Grid Combat</p>
+                <h1 class="text-base md:text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Airplane Battle Strategy</h1>
+                <p class="text-[10px] md:text-xs text-slate-500">2-4 Player Battleground</p>
             </div>
         </div>
 
-        <!-- Room & Audio Controls -->
-        <div class="flex items-center space-x-2">
+        <!-- Player Role & Room Info -->
+        <div class="flex items-center space-x-2 flex-wrap gap-1.5">
             <div id="room-code-badge" class="hidden px-2.5 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold rounded-xl flex items-center gap-1.5">
-                <span>Room: <strong id="display-room-code" class="text-indigo-900 font-mono text-xs sm:text-sm">----</strong></span>
+                <span>Room: <strong id="display-room-code" class="text-indigo-900 font-mono">----</strong></span>
                 <button onclick="copyRoomCode()" class="text-[10px] bg-indigo-200 hover:bg-indigo-300 px-1.5 py-0.5 rounded text-indigo-800 transition">📋 Copy</button>
             </div>
 
-            <div id="role-badge" class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] sm:text-xs font-bold rounded-xl">
+            <div id="role-badge" class="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl">
                 Offline Mode
             </div>
 
-            <button id="sound-btn" onclick="toggleAudio()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] sm:text-xs font-semibold rounded-xl transition shadow-sm">
-                🔊 On
+            <button id="sound-btn" onclick="toggleAudio()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition shadow-sm">
+                🔊 Sound: On
             </button>
         </div>
     </header>
 
-    <!-- Main Game Section -->
-    <main class="w-full max-w-6xl flex flex-col lg:flex-row gap-3 sm:gap-4 flex-grow items-stretch justify-center">
+    <!-- Main Game Workspace -->
+    <main class="w-full max-w-6xl flex flex-col lg:flex-row gap-3 flex-grow items-stretch justify-center">
         
-        <!-- Controls & Dashboard -->
-        <div class="w-full lg:w-72 bg-white rounded-2xl shadow-md p-3 sm:p-4 flex flex-col justify-between border border-slate-100">
+        <!-- Sidebar Controls & Status -->
+        <div class="w-full lg:w-72 bg-white rounded-2xl shadow-md p-3 md:p-4 flex flex-col justify-between border border-slate-100">
             <div>
-                <h2 class="text-xs sm:text-sm font-bold text-slate-700 mb-2 pb-1.5 border-b border-slate-100 flex items-center justify-between">
+                <h2 class="text-xs md:text-sm font-bold text-slate-700 mb-2 pb-2 border-b border-slate-100 flex items-center justify-between">
                     <span>Battle Status</span>
                     <span id="turn-badge" class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-red-100 text-red-600">Red's Turn</span>
                 </h2>
 
-                <!-- Fleet Status -->
-                <div class="grid grid-cols-2 gap-2 mb-3">
-                    <div id="red-stat-card" class="bg-red-50 border border-red-100 p-2 rounded-xl text-center">
-                        <span id="red-name-display" class="block text-[10px] font-semibold text-red-500 uppercase truncate">Red Player</span>
-                        <span id="red-planes-count" class="text-lg sm:text-xl font-bold text-red-600">3</span>
-                        <span class="text-[9px] text-slate-400 block">Planes Left</span>
+                <!-- Fleet Stats for 2, 3 or 4 players -->
+                <div id="fleet-stats-container" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 mb-3">
+                    <div id="red-stat-card" class="bg-red-50 border border-red-200 p-2 rounded-xl text-center">
+                        <span id="red-name-display" class="block text-[10px] font-bold text-red-600 truncate">Red</span>
+                        <span id="red-planes-count" class="text-lg font-extrabold text-red-600">4</span>
+                        <span class="text-[9px] text-slate-400 block">Planes</span>
                     </div>
-                    <div id="blue-stat-card" class="bg-blue-50 border border-blue-100 p-2 rounded-xl text-center">
-                        <span id="blue-name-display" class="block text-[10px] font-semibold text-blue-500 uppercase truncate">Blue Player</span>
-                        <span id="blue-planes-count" class="text-lg sm:text-xl font-bold text-blue-600">3</span>
-                        <span class="text-[9px] text-slate-400 block">Planes Left</span>
+                    <div id="blue-stat-card" class="bg-blue-50 border border-blue-200 p-2 rounded-xl text-center">
+                        <span id="blue-name-display" class="block text-[10px] font-bold text-blue-600 truncate">Blue</span>
+                        <span id="blue-planes-count" class="text-lg font-extrabold text-blue-600">4</span>
+                        <span class="text-[9px] text-slate-400 block">Planes</span>
+                    </div>
+                    <div id="green-stat-card" class="bg-emerald-50 border border-emerald-200 p-2 rounded-xl text-center">
+                        <span id="green-name-display" class="block text-[10px] font-bold text-emerald-600 truncate">Green</span>
+                        <span id="green-planes-count" class="text-lg font-extrabold text-emerald-600">4</span>
+                        <span class="text-[9px] text-slate-400 block">Planes</span>
+                    </div>
+                    <div id="yellow-stat-card" class="bg-amber-50 border border-amber-200 p-2 rounded-xl text-center">
+                        <span id="yellow-name-display" class="block text-[10px] font-bold text-amber-600 truncate">Yellow</span>
+                        <span id="yellow-planes-count" class="text-lg font-extrabold text-amber-600">4</span>
+                        <span class="text-[9px] text-slate-400 block">Planes</span>
                     </div>
                 </div>
 
                 <!-- Dice Roller -->
-                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-2.5 sm:p-3 text-center mb-3 shadow-inner">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[11px] font-semibold text-slate-600">🎲 Steps Bank:</span>
-                        <span id="remaining-steps-display" class="text-xs font-bold text-indigo-600">0 Left</span>
-                    </div>
-                    <div class="flex justify-center items-center my-2">
-                        <div id="dice-box" class="w-12 h-12 sm:w-14 sm:h-14 bg-white border-2 border-indigo-500 rounded-2xl shadow-sm flex items-center justify-center text-xl sm:text-2xl font-bold text-indigo-600">
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-2.5 text-center mb-3 shadow-inner">
+                    <h3 class="text-[11px] font-semibold text-slate-600 mb-1">🎲 Dice Roller</h3>
+                    <div class="flex justify-center items-center mb-2">
+                        <div id="dice-box" class="w-12 h-12 md:w-14 md:h-14 bg-white border-2 border-indigo-500 rounded-xl shadow-md flex items-center justify-center text-xl font-bold text-indigo-600">
                             -
                         </div>
                     </div>
@@ -134,56 +142,52 @@
                 </div>
             </div>
 
-            <!-- Game Instructions Banner -->
-            <div id="game-message" class="bg-amber-50 border border-amber-200 text-amber-800 text-[11px] rounded-xl p-2.5 font-medium leading-relaxed">
-                Roll the dice, select your plane, and click on valid green highlighted grids to move!
+            <!-- Message Banner -->
+            <div id="game-message" class="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl p-2.5 font-medium leading-relaxed text-center">
+                Create or Join a room to start the strategic battle!
             </div>
         </div>
 
-        <!-- Interactive Board Canvas -->
-        <div class="flex-grow bg-white rounded-2xl shadow-md p-2 sm:p-3 flex flex-col items-center justify-center border border-slate-100 relative min-h-[420px] sm:min-h-[500px]">
-            
-            <!-- Dynamic Sticker FX Overlay -->
+        <!-- Canvas Game Grid Area -->
+        <div class="flex-grow bg-white rounded-2xl shadow-md p-2 md:p-3 flex flex-col items-center justify-center border border-slate-100 overflow-hidden relative min-h-[380px] md:min-h-[500px]">
             <div id="sticker-layer" class="absolute inset-0 pointer-events-none z-20 flex items-center justify-center overflow-hidden"></div>
 
-            <div id="canvas-container" class="w-full h-full overflow-auto flex justify-center items-center p-1">
-                <canvas id="game-canvas" class="grid-paper rounded-xl shadow-sm border border-slate-200 cursor-pointer"></canvas>
+            <div id="canvas-container" class="w-full h-full overflow-auto flex justify-center items-center touch-pan-x touch-pan-y">
+                <canvas id="game-canvas" class="grid-paper rounded-xl shadow-sm border border-slate-200 cursor-crosshair max-w-full"></canvas>
             </div>
             
-            <div class="mt-2 flex items-center justify-between w-full text-[10px] sm:text-xs text-slate-400 px-1">
-                <span>⚔️ Open Grid Warfare</span>
-                <span id="sync-status" class="text-emerald-600 font-semibold flex items-center gap-1">🟢 Connected</span>
+            <div class="mt-2 flex items-center justify-between w-full text-[10px] md:text-xs text-slate-400 px-1">
+                <span>🛡️ Strategic Air Combat Grid</span>
+                <span id="player-count-display" class="font-bold text-indigo-600">4-Player Mode</span>
             </div>
         </div>
 
-        <!-- Chat & Stickers Panel -->
-        <div class="w-full lg:w-80 bg-white rounded-2xl shadow-md p-3 sm:p-4 flex flex-col border border-slate-100 h-64 lg:h-auto">
-            <h3 class="text-xs sm:text-sm font-bold text-slate-700 mb-2 pb-1.5 border-b border-slate-100 flex items-center justify-between">
-                <span>💬 Chat & Reactions</span>
+        <!-- Chat Panel -->
+        <div class="w-full lg:w-72 bg-white rounded-2xl shadow-md p-3 md:p-4 flex flex-col border border-slate-100 h-64 lg:h-auto">
+            <h3 class="text-xs font-bold text-slate-700 mb-2 pb-1 border-b border-slate-100 flex items-center justify-between">
+                <span>💬 Quick Chat & Stickers</span>
             </h3>
 
-            <!-- Quick Sticker Buttons -->
+            <!-- Sticker Reaction Buttons -->
             <div class="mb-2">
                 <div class="grid grid-cols-4 gap-1">
-                    <button onclick="sendSticker('🔥')" class="text-base bg-slate-50 hover:bg-amber-100 border border-slate-200 p-1 rounded-xl transition active:scale-95">🔥</button>
-                    <button onclick="sendSticker('👍')" class="text-base bg-slate-50 hover:bg-emerald-100 border border-slate-200 p-1 rounded-xl transition active:scale-95">👍</button>
-                    <button onclick="sendSticker('✈️')" class="text-base bg-slate-50 hover:bg-indigo-100 border border-slate-200 p-1 rounded-xl transition active:scale-95">✈️</button>
-                    <button onclick="sendSticker('💥')" class="text-base bg-slate-50 hover:bg-red-100 border border-slate-200 p-1 rounded-xl transition active:scale-95">💥</button>
-                    <button onclick="sendSticker('🎯')" class="text-base bg-slate-50 hover:bg-rose-100 border border-slate-200 p-1 rounded-xl transition active:scale-95">🎯</button>
-                    <button onclick="sendSticker('😂')" class="text-base bg-slate-50 hover:bg-yellow-100 border border-slate-200 p-1 rounded-xl transition active:scale-95">😂</button>
-                    <button onclick="sendSticker('😱')" class="text-base bg-slate-50 hover:bg-indigo-100 border border-slate-200 p-1 rounded-xl transition active:scale-95">😱</button>
-                    <button onclick="sendSticker('🏆')" class="text-base bg-slate-50 hover:bg-yellow-200 border border-slate-200 p-1 rounded-xl transition active:scale-95">🏆</button>
+                    <button onclick="sendSticker('🔥')" class="text-base bg-slate-50 hover:bg-amber-100 border border-slate-200 p-1 rounded-lg transition active:scale-95 shadow-sm">🔥</button>
+                    <button onclick="sendSticker('👍')" class="text-base bg-slate-50 hover:bg-emerald-100 border border-slate-200 p-1 rounded-lg transition active:scale-95 shadow-sm">👍</button>
+                    <button onclick="sendSticker('✈️')" class="text-base bg-slate-50 hover:bg-indigo-100 border border-slate-200 p-1 rounded-lg transition active:scale-95 shadow-sm">✈️</button>
+                    <button onclick="sendSticker('💥')" class="text-base bg-slate-50 hover:bg-red-100 border border-slate-200 p-1 rounded-lg transition active:scale-95 shadow-sm">💥</button>
+                    <button onclick="sendSticker('🎯')" class="text-base bg-slate-50 hover:bg-rose-100 border border-slate-200 p-1 rounded-lg transition active:scale-95 shadow-sm">🎯</button>
+                    <button onclick="sendSticker('😂')" class="text-base bg-slate-50 hover:bg-yellow-100 border border-slate-200 p-1 rounded-lg transition active:scale-95 shadow-sm">😂</button>
+                    <button onclick="sendSticker('💩')" class="text-base bg-slate-50 hover:bg-amber-100 border border-slate-200 p-1 rounded-lg transition active:scale-95 shadow-sm">💩</button>
+                    <button onclick="sendSticker('🏆')" class="text-base bg-slate-50 hover:bg-yellow-200 border border-slate-200 p-1 rounded-lg transition active:scale-95 shadow-sm">🏆</button>
                 </div>
             </div>
 
-            <!-- Chat History -->
             <div id="chat-messages" class="flex-grow bg-slate-50 rounded-xl p-2 border border-slate-200 overflow-y-auto text-[11px] space-y-1.5 mb-2 chat-scroll">
-                <div class="text-center text-slate-400 text-[10px]">--- Online Battle Lobby ---</div>
+                <div class="text-center text-slate-400 text-[10px] my-0.5">--- Battle Chat Room ---</div>
             </div>
 
-            <!-- Input Box -->
             <form onsubmit="handleSendChat(event)" class="flex gap-1">
-                <input id="chat-input" type="text" placeholder="Type message..." class="flex-grow px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <input id="chat-input" type="text" placeholder="Message..." class="flex-grow px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500">
                 <button type="submit" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition">
                     Send
                 </button>
@@ -192,23 +196,34 @@
 
     </main>
 
-    <!-- Multiplayer Lobby Modal -->
-    <div id="lobby-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-100 text-center">
-            <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">
+    <!-- Room Setup Lobby Modal -->
+    <div id="lobby-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-3">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-100 text-center">
+            <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-3xl">
                 ✈️
             </div>
-            <h2 class="text-xl font-bold text-slate-800 mb-1">Paper Airplane Battle</h2>
-            <p class="text-xs text-slate-500 mb-4">Play live 2-player grid combat with friends!</p>
+            <h2 class="text-xl font-extrabold text-slate-800 mb-1">Paper Airplane Online</h2>
+            <p class="text-xs text-slate-500 mb-4">Choose mode (2, 3, or 4 Players) and join room!</p>
 
+            <!-- Name Input Field -->
             <div class="mb-3 text-left">
-                <label class="text-xs font-bold text-slate-700 block mb-1">Your Name / Callsign:</label>
-                <input id="player-name-input" type="text" maxlength="12" placeholder="Enter your name..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <label class="text-xs font-bold text-slate-700 block mb-1">Your Name:</label>
+                <input id="player-name-input" type="text" maxlength="15" placeholder="Enter your name..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <!-- Player Mode Selection Option -->
+            <div class="mb-4 text-left">
+                <label class="text-xs font-bold text-slate-700 block mb-1">Select Players Count:</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" onclick="selectPlayerMode(2)" id="mode-2-btn" class="py-2 bg-indigo-600 text-white font-bold rounded-xl text-xs shadow">2 Players</button>
+                    <button type="button" onclick="selectPlayerMode(3)" id="mode-3-btn" class="py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs hover:bg-slate-200">3 Players</button>
+                    <button type="button" onclick="selectPlayerMode(4)" id="mode-4-btn" class="py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs hover:bg-slate-200">4 Players</button>
+                </div>
             </div>
 
             <div class="space-y-3">
-                <button onclick="createRoom()" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-xs rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
-                    ➕ Create New Game Room
+                <button onclick="createRoom()" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95 text-xs flex items-center justify-center gap-2">
+                    ➕ Create Room
                 </button>
 
                 <div class="flex items-center my-2 text-[10px] text-slate-400">
@@ -218,8 +233,8 @@
                 </div>
 
                 <div class="flex gap-2">
-                    <input id="room-input" type="text" maxlength="4" placeholder="4-digit code" class="flex-grow px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-center font-mono text-base uppercase font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <button onclick="joinRoom()" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow transition">
+                    <input id="room-input" type="text" maxlength="4" placeholder="4-digit code" class="flex-grow px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-center font-mono text-base uppercase tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button onclick="joinRoom()" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs shadow transition">
                         Join
                     </button>
                 </div>
@@ -229,74 +244,77 @@
         </div>
     </div>
 
-    <!-- Game Over Modal -->
+    <!-- GAME OVER MODAL -->
     <div id="gameover-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-xs w-full p-6 shadow-2xl text-center border border-slate-100">
-            <div id="winner-trophy" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-lg animate-bounce">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center border border-slate-100">
+            <div id="winner-trophy" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-xl animate-bounce">
                 🏆
             </div>
             <h2 id="winner-title" class="text-xl font-extrabold text-slate-800 mb-1">Game Finished!</h2>
-            <p id="winner-message" class="text-xs text-slate-600 mb-5 leading-relaxed">Red Team destroyed all enemy airplanes!</p>
-            <button onclick="restartGame()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xs rounded-xl shadow-lg transition transform active:scale-95">
+            <p id="winner-message" class="text-xs text-slate-600 mb-5 leading-relaxed">Winner text here!</p>
+            <button onclick="restartGame()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl text-xs shadow-lg transition transform active:scale-95">
                 🔄 Play Again
             </button>
         </div>
     </div>
 
-    <!-- Notification Modal -->
+    <!-- Custom Notification Modal -->
     <div id="notification-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl text-center border border-slate-100">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl text-center border border-slate-100">
             <div id="notification-icon" class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2 text-lg font-bold">ℹ️</div>
             <h4 id="notification-title" class="text-base font-bold text-slate-800 mb-1">Notice</h4>
-            <p id="notification-message" class="text-xs text-slate-600 mb-4 leading-relaxed">Message...</p>
-            <button onclick="closeNotification()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition">OK</button>
+            <p id="notification-message" class="text-xs text-slate-600 mb-4 leading-relaxed">Message goes here...</p>
+            <button onclick="closeNotification()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs shadow-md transition">OK</button>
         </div>
     </div>
 
-    <!-- Firebase Realtime Engine Setup -->
+    <!-- Firebase SDK Modules -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global Variables
+        const firebaseConfig = {
+            apiKey: "AIzaSyDE_qI-3uItuj1FHsy7SEWn2YudZnR1cF4",
+            authDomain: "world-war-3-3e98b.firebaseapp.com",
+            projectId: "world-war-3-3e98b",
+            storageBucket: "world-war-3-3e98b.firebasestorage.app",
+            messagingSenderId: "591955421240",
+            appId: "1:591955421240:web:36093e16132f6f7f265ecd",
+            measurementId: "G-VT2ET6RMG4"
+        };
+
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'airplane-combat-game';
-        
-        // Auto Config Fallback
-        let firebaseConfig;
-        if (typeof __firebase_config !== 'undefined') {
-            firebaseConfig = JSON.parse(__firebase_config);
-        } else {
-            firebaseConfig = {
-                apiKey: "AIzaSyDE_qI-3uItuj1FHsy7SEWn2YudZnR1cF4",
-                authDomain: "world-war-3-3e98b.firebaseapp.com",
-                projectId: "world-war-3-3e98b",
-                storageBucket: "world-war-3-3e98b.firebasestorage.app",
-                messagingSenderId: "591955421240",
-                appId: "1:591955421240:web:36093e16132f6f7f265ecd"
-            };
-        }
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Game Board Constants
-        const COLS = 15;
-        const ROWS = 20;
+        // Grid Board Extended Dimensions for longer gameplay (20 x 24)
+        const COLS = 18;
+        const ROWS = 22;
         let CELL_SIZE = 28;
 
         let canvas, ctx;
         let soundEnabled = true;
         let currentUser = null;
-        let myRole = null; // 'red' or 'blue'
+        let selectedMaxPlayers = 2; // 2, 3, or 4
+        let myRole = null; // 'red', 'blue', 'green', 'yellow'
         let myName = 'Player';
         let currentRoomId = null;
         let roomDocRef = null;
         let unsubscribeRoom = null;
         let lastProcessedStickerId = null;
 
-        // Tone.js Audio Controls
+        const PLAYER_ORDER = ['red', 'blue', 'green', 'yellow'];
+        const PLAYER_COLORS = {
+            red: { primary: '#ef4444', dark: '#dc2626', bg: 'bg-red-500' },
+            blue: { primary: '#3b82f6', dark: '#2563eb', bg: 'bg-blue-500' },
+            green: { primary: '#10b981', dark: '#059669', bg: 'bg-emerald-500' },
+            yellow: { primary: '#f59e0b', dark: '#d97706', bg: 'bg-amber-500' }
+        };
+
+        // Audio Setup
         let synth, noiseSynth;
         function initAudio() {
             if (!synth) {
@@ -321,42 +339,94 @@
                 initAudio();
                 if (type === 'roll') synth?.triggerAttackRelease('C5', '8n');
                 else if (type === 'step') synth?.triggerAttackRelease('E4', '16n');
+                else if (type === 'clash') noiseSynth?.triggerAttackRelease('8n');
                 else if (type === 'hit') noiseSynth?.triggerAttackRelease('4n');
+                else if (type === 'error') synth?.triggerAttackRelease('G2', '8n');
                 else if (type === 'chat') synth?.triggerAttackRelease('G4', '16n');
-            } catch (e) {}
+            } catch (e) { console.log("Audio Error", e); }
         };
 
         window.toggleAudio = function() {
             soundEnabled = !soundEnabled;
-            document.getElementById('sound-btn').innerText = soundEnabled ? '🔊 On' : '🔇 Off';
+            document.getElementById('sound-btn').innerText = soundEnabled ? '🔊 Sound: On' : '🔇 Sound: Off';
         };
 
-        // Game State Structure
+        window.selectPlayerMode = function(count) {
+            selectedMaxPlayers = count;
+            [2, 3, 4].forEach(n => {
+                const btn = document.getElementById(`mode-${n}-btn`);
+                if (n === count) {
+                    btn.className = 'py-2 bg-indigo-600 text-white font-bold rounded-xl text-xs shadow';
+                } else {
+                    btn.className = 'py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs hover:bg-slate-200';
+                }
+            });
+        };
+
+        // Extended Fleet for Longer Play Time (4 Planes Per Player)
+        function getDefaultPlanes(maxPlayers) {
+            const planes = [];
+
+            // Red (Top Edge)
+            planes.push(
+                { id: 'r1', player: 'red', x: 2, y: 1, active: true },
+                { id: 'r2', player: 'red', x: 6, y: 1, active: true },
+                { id: 'r3', player: 'red', x: 11, y: 1, active: true },
+                { id: 'r4', player: 'red', x: 15, y: 1, active: true }
+            );
+
+            // Blue (Bottom Edge)
+            planes.push(
+                { id: 'b1', player: 'blue', x: 2, y: 20, active: true },
+                { id: 'b2', player: 'blue', x: 6, y: 20, active: true },
+                { id: 'b3', player: 'blue', x: 11, y: 20, active: true },
+                { id: 'b4', player: 'blue', x: 15, y: 20, active: true }
+            );
+
+            if (maxPlayers >= 3) {
+                // Green (Left Edge)
+                planes.push(
+                    { id: 'g1', player: 'green', x: 1, y: 3, active: true },
+                    { id: 'g2', player: 'green', x: 1, y: 7, active: true },
+                    { id: 'g3', player: 'green', x: 1, y: 12, active: true },
+                    { id: 'g4', player: 'green', x: 1, y: 17, active: true }
+                );
+            }
+
+            if (maxPlayers >= 4) {
+                // Yellow (Right Edge)
+                planes.push(
+                    { id: 'y1', player: 'yellow', x: 17, y: 3, active: true },
+                    { id: 'y2', player: 'yellow', x: 17, y: 7, active: true },
+                    { id: 'y3', player: 'yellow', x: 17, y: 12, active: true },
+                    { id: 'y4', player: 'yellow', x: 17, y: 17, active: true }
+                );
+            }
+
+            return planes;
+        }
+
         let gameState = {
-            status: 'waiting', 
+            maxPlayers: 2,
+            status: 'waiting',
             turn: 'red',
             winner: null,
-            redName: 'Red Player',
-            blueName: 'Blue Player',
+            players: {
+                red: { name: 'Red', uid: null },
+                blue: { name: 'Waiting...', uid: null },
+                green: { name: 'Waiting...', uid: null },
+                yellow: { name: 'Waiting...', uid: null }
+            },
             diceRolled: false,
             diceValue: 0,
             remainingSteps: 0,
             selectedPlaneId: null,
+            currentPath: [],
             planes: [],
-            chatMessages: [],
-            lastSticker: null
+            lines: [],
+            clashPoints: [],
+            chatMessages: []
         };
-
-        function getDefaultPlanes() {
-            return [
-                { id: 'r1', player: 'red', x: 3, y: 2, active: true },
-                { id: 'r2', player: 'red', x: 7, y: 2, active: true },
-                { id: 'r3', player: 'red', x: 11, y: 2, active: true },
-                { id: 'b1', player: 'blue', x: 3, y: 17, active: true },
-                { id: 'b2', player: 'blue', x: 7, y: 17, active: true },
-                { id: 'b3', player: 'blue', x: 11, y: 17, active: true }
-            ];
-        }
 
         async function initAuth() {
             try {
@@ -368,37 +438,41 @@
                     currentUser = userCred.user;
                 }
             } catch (err) {
-                console.error("Auth error:", err);
+                console.error("Auth initialization failed:", err);
             }
         }
+
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            const availableWidth = Math.min(container.clientWidth - 10, 600);
+            CELL_SIZE = Math.max(18, Math.floor(availableWidth / COLS));
+            canvas.width = COLS * CELL_SIZE;
+            canvas.height = ROWS * CELL_SIZE;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
 
         window.addEventListener('load', async () => {
             canvas = document.getElementById('game-canvas');
             ctx = canvas.getContext('2d');
-            
-            // Adjust canvas to device size
-            adjustCanvasSize();
-            window.addEventListener('resize', adjustCanvasSize);
+            resizeCanvas();
 
             await initAuth();
 
-            canvas.addEventListener('click', handleCanvasClick);
+            canvas.addEventListener('click', handleCanvasInteraction);
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                handleCanvasInteraction(touch);
+            }, { passive: false });
 
-            function renderLoop() {
+            function animationLoop() {
+                updateParticles();
                 drawBoard();
-                requestAnimationFrame(renderLoop);
+                requestAnimationFrame(animationLoop);
             }
-            requestAnimationFrame(renderLoop);
+            requestAnimationFrame(animationLoop);
         });
-
-        function adjustCanvasSize() {
-            const container = document.getElementById('canvas-container');
-            const availableWidth = container.clientWidth - 10;
-            CELL_SIZE = Math.max(18, Math.min(32, Math.floor(availableWidth / COLS)));
-            
-            canvas.width = COLS * CELL_SIZE;
-            canvas.height = ROWS * CELL_SIZE;
-        }
 
         window.showNotification = function(title, message, type = 'info') {
             document.getElementById('notification-title').innerText = title;
@@ -410,508 +484,304 @@
             document.getElementById('notification-modal').classList.add('hidden');
         };
 
-        // Network Room Operations
+        window.copyRoomCode = function() {
+            if (!currentRoomId) return;
+            navigator.clipboard?.writeText(currentRoomId);
+            window.showNotification("Copied!", `Room Code ${currentRoomId} copied! Share with players.`, "success");
+        };
+
+        function getEnteredPlayerName(defaultFallback) {
+            const inputVal = document.getElementById('player-name-input').value.trim();
+            return inputVal || defaultFallback;
+        }
+
         window.createRoom = async function() {
-            const nameInput = document.getElementById('player-name-input').value.trim();
-            if (!nameInput) {
-                document.getElementById('lobby-error').innerText = 'தயவுசெய்து உங்கள் பெயரை பதிவு செய்யுங்கள்!';
-                document.getElementById('lobby-error').classList.remove('hidden');
-                return;
-            }
-
-            myName = nameInput;
-            const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
-            currentRoomId = roomCode;
+            if (!currentUser) await initAuth();
+            const roomId = Math.floor(1000 + Math.random() * 9000).toString();
+            currentRoomId = roomId;
             myRole = 'red';
+            myName = getEnteredPlayerName("Red Commander");
 
-            // Firestore Path Structure: /artifacts/{appId}/public/data/{collectionName}
-            roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
+            roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
 
             const initialRoomData = {
-                roomId: roomCode,
+                roomId: roomId,
+                maxPlayers: selectedMaxPlayers,
                 status: 'waiting',
                 turn: 'red',
                 winner: null,
-                redPlayer: currentUser ? currentUser.uid : 'anon-red',
-                redName: myName,
-                bluePlayer: null,
-                blueName: 'Waiting...',
+                players: {
+                    red: { name: myName, uid: currentUser.uid },
+                    blue: { name: 'Waiting...', uid: null },
+                    green: { name: 'Waiting...', uid: null },
+                    yellow: { name: 'Waiting...', uid: null }
+                },
                 diceRolled: false,
                 diceValue: 0,
                 remainingSteps: 0,
-                selectedPlaneId: null,
-                planes: getDefaultPlanes(),
-                chatMessages: [{ sender: 'System', text: `${myName} created room ${roomCode}. Waiting for opponent...`, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }],
-                lastSticker: null,
-                updatedAt: Date.now()
+                planes: getDefaultPlanes(selectedMaxPlayers),
+                lines: [],
+                chatMessages: []
             };
 
             try {
                 await setDoc(roomDocRef, initialRoomData);
-                listenToRoom();
+                listenToRoom(roomId);
                 document.getElementById('lobby-modal').classList.add('hidden');
-                updateUIForRoom(roomCode);
-            } catch (err) {
-                console.error("Create Room Error:", err);
-                document.getElementById('lobby-error').innerText = 'அறையை உருவாக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.';
+                updateRoleBadge();
+            } catch (e) {
+                console.error("Error creating room:", e);
+                document.getElementById('lobby-error').innerText = "Failed to create room. Try again.";
                 document.getElementById('lobby-error').classList.remove('hidden');
             }
         };
 
         window.joinRoom = async function() {
-            const nameInput = document.getElementById('player-name-input').value.trim();
-            const codeInput = document.getElementById('room-input').value.trim();
-
-            if (!nameInput) {
-                document.getElementById('lobby-error').innerText = 'தயவுசெய்து உங்கள் பெயரை உள்ளிடவும்!';
-                document.getElementById('lobby-error').classList.remove('hidden');
-                return;
-            }
-            if (!codeInput || codeInput.length !== 4) {
-                document.getElementById('lobby-error').innerText = '4-இலக்க Room Code-ஐ உள்ளிடவும்!';
+            const input = document.getElementById('room-input').value.trim().toUpperCase();
+            if (input.length !== 4) {
+                document.getElementById('lobby-error').innerText = "Enter valid 4-digit code.";
                 document.getElementById('lobby-error').classList.remove('hidden');
                 return;
             }
 
-            myName = nameInput;
-            currentRoomId = codeInput;
-            roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', codeInput);
+            if (!currentUser) await initAuth();
+
+            currentRoomId = input;
+            roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', input);
 
             try {
                 const snap = await getDoc(roomDocRef);
                 if (!snap.exists()) {
-                    document.getElementById('lobby-error').innerText = 'Room Code தவறானது!';
+                    document.getElementById('lobby-error').innerText = "Room not found!";
                     document.getElementById('lobby-error').classList.remove('hidden');
                     return;
                 }
 
                 const data = snap.data();
-                if (data.bluePlayer && data.bluePlayer !== currentUser?.uid) {
-                    document.getElementById('lobby-error').innerText = 'இந்த Room ஏற்கனவே நிறைந்துவிட்டது!';
+                const players = data.players || {};
+                const maxP = data.maxPlayers || 2;
+
+                let assignedRole = null;
+                const roles = PLAYER_ORDER.slice(0, maxP);
+
+                // Check if already in room or pick next empty role
+                for (const r of roles) {
+                    if (players[r] && players[r].uid === currentUser.uid) {
+                        assignedRole = r;
+                        break;
+                    }
+                }
+
+                if (!assignedRole) {
+                    for (const r of roles) {
+                        if (!players[r] || !players[r].uid) {
+                            assignedRole = r;
+                            break;
+                        }
+                    }
+                }
+
+                if (!assignedRole) {
+                    document.getElementById('lobby-error').innerText = "Room is full!";
                     document.getElementById('lobby-error').classList.remove('hidden');
                     return;
                 }
 
-                myRole = 'blue';
+                myRole = assignedRole;
+                myName = getEnteredPlayerName(`${assignedRole.toUpperCase()} Pilot`);
 
-                const newChat = [...(data.chatMessages || []), {
-                    sender: 'System',
-                    text: `${myName} joined the room! Battle Ready!`,
-                    time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-                }];
+                players[assignedRole] = { name: myName, uid: currentUser.uid };
+
+                // Check if all slots filled to set active
+                const filledCount = roles.filter(r => players[r] && players[r].uid).length;
+                const newStatus = filledCount >= maxP ? 'active' : 'waiting';
 
                 await updateDoc(roomDocRef, {
-                    bluePlayer: currentUser ? currentUser.uid : 'anon-blue',
-                    blueName: myName,
-                    status: 'active',
-                    chatMessages: newChat,
-                    updatedAt: Date.now()
+                    players: players,
+                    status: newStatus
                 });
 
-                listenToRoom();
+                listenToRoom(input);
                 document.getElementById('lobby-modal').classList.add('hidden');
-                updateUIForRoom(codeInput);
-
-            } catch (err) {
-                console.error("Join Room Error:", err);
-                document.getElementById('lobby-error').innerText = 'Room-இல் இணைய முடியவில்லை.';
+                updateRoleBadge();
+            } catch (e) {
+                console.error("Error joining room:", e);
+                document.getElementById('lobby-error').innerText = "Failed to join room.";
                 document.getElementById('lobby-error').classList.remove('hidden');
             }
         };
 
-        function listenToRoom() {
+        function listenToRoom(roomId) {
             if (unsubscribeRoom) unsubscribeRoom();
 
-            unsubscribeRoom = onSnapshot(roomDocRef, (docSnap) => {
-                if (!docSnap.exists()) return;
+            unsubscribeRoom = onSnapshot(roomDocRef, (snap) => {
+                if (!snap.exists()) return;
+                const data = snap.data();
 
-                const data = docSnap.data();
-                gameState = data;
+                gameState.maxPlayers = data.maxPlayers || 2;
+                gameState.status = data.status;
+                gameState.turn = data.turn;
+                gameState.winner = data.winner;
+                gameState.players = data.players || {};
+                gameState.diceRolled = data.diceRolled;
+                gameState.diceValue = data.diceValue;
+                gameState.remainingSteps = data.remainingSteps;
+                gameState.planes = data.planes || [];
+                gameState.lines = data.lines || [];
+                gameState.chatMessages = data.chatMessages || [];
 
-                // Sync UI State
-                renderChat(data.chatMessages || []);
-                updateDashboardUI();
-
-                // Trigger Floating Sticker Animations
                 if (data.lastSticker && data.lastSticker.id !== lastProcessedStickerId) {
                     lastProcessedStickerId = data.lastSticker.id;
-                    showFloatingSticker(data.lastSticker.emoji, data.lastSticker.sender);
+                    displayAnimatedSticker(data.lastSticker.emoji, data.lastSticker.senderRole);
                 }
 
-                // Check Game Winner Modal
-                if (data.status === 'finished' && data.winner) {
-                    showGameOverModal(data.winner);
+                if (data.lastExplosion) {
+                    triggerExplosion(data.lastExplosion.x, data.lastExplosion.y, data.lastExplosion.color);
                 }
-            }, (err) => {
-                console.error("Snapshot error:", err);
+
+                if (gameState.status === 'finished' && gameState.winner) {
+                    showGameOverModal(gameState.winner);
+                }
+
+                updateRoleBadge();
+                updateUI();
+                renderChatMessages();
             });
         }
 
-        function updateUIForRoom(code) {
-            document.getElementById('room-code-badge').classList.remove('hidden');
-            document.getElementById('display-room-code').innerText = code;
-
-            const badge = document.getElementById('role-badge');
-            if (myRole === 'red') {
-                badge.className = 'px-2.5 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-xl';
-                badge.innerText = 'Red Leader';
-            } else {
-                badge.className = 'px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-xl';
-                badge.innerText = 'Blue Leader';
-            }
-        }
-
-        window.copyRoomCode = function() {
-            if (currentRoomId) {
-                const tempInput = document.createElement('input');
-                tempInput.value = currentRoomId;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempInput);
-                showNotification('Code Copied!', `Room code ${currentRoomId} copied to clipboard.`);
-            }
-        };
-
-        // Real-time Action Logic
-        window.rollDice = async function() {
-            if (!roomDocRef) return;
-            if (gameState.turn !== myRole) {
-                showNotification("Wait!", "எதிரியின் திருப்பம் முடிவடையும் வரை காத்திருக்கவும்.");
-                return;
-            }
-            if (gameState.diceRolled && gameState.remainingSteps > 0) {
-                showNotification("Steps Available", "உங்களிடம் மீதமுள்ள நகர்வுகள் உள்ளன!");
-                return;
-            }
-
-            const diceBox = document.getElementById('dice-box');
-            diceBox.classList.add('rolling');
-            window.playSound('roll');
-
-            setTimeout(async () => {
-                diceBox.classList.remove('rolling');
-                const val = Math.floor(Math.random() * 6) + 1;
-
-                await updateDoc(roomDocRef, {
-                    diceRolled: true,
-                    diceValue: val,
-                    remainingSteps: val,
-                    updatedAt: Date.now()
-                });
-            }, 400);
-        };
-
-        function updateDashboardUI() {
-            document.getElementById('red-name-display').innerText = gameState.redName || 'Red Player';
-            document.getElementById('blue-name-display').innerText = gameState.blueName || 'Blue Player';
-
-            const activeRed = (gameState.planes || []).filter(p => p.player === 'red' && p.active).length;
-            const activeBlue = (gameState.planes || []).filter(p => p.player === 'blue' && p.active).length;
-
-            document.getElementById('red-planes-count').innerText = activeRed;
-            document.getElementById('blue-planes-count').innerText = activeBlue;
-
-            const turnBadge = document.getElementById('turn-badge');
-            if (gameState.turn === 'red') {
-                turnBadge.innerText = "Red's Turn";
-                turnBadge.className = 'text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-red-100 text-red-600';
-            } else {
-                turnBadge.innerText = "Blue's Turn";
-                turnBadge.className = 'text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-blue-100 text-blue-600';
-            }
-
-            document.getElementById('dice-box').innerText = gameState.diceValue || '-';
-            document.getElementById('remaining-steps-display').innerText = `${gameState.remainingSteps || 0} Left`;
-
-            const rollBtn = document.getElementById('roll-btn');
-            const isMyTurn = gameState.turn === myRole;
-            rollBtn.disabled = !isMyTurn || (gameState.diceRolled && gameState.remainingSteps > 0);
-
-            const msgBox = document.getElementById('game-message');
-            if (gameState.status === 'waiting') {
-                msgBox.innerText = "நண்பர் சேர்வதற்காக காத்திருக்கிறது (Room Code-ஐ பகிரவும்)...";
-            } else if (isMyTurn) {
-                if (!gameState.diceRolled) {
-                    msgBox.innerText = "🎲 உங்கள் திருப்பம்! பகடையை உருட்டவும்.";
-                } else if (gameState.remainingSteps > 0) {
-                    msgBox.innerText = `✈️ ${gameState.remainingSteps} படிகள் மீதமுள்ளன! விமானத்தைத் தேர்ந்தெடுத்து நகர்த்தவும்.`;
-                }
-            } else {
-                msgBox.innerText = "⏳ எதிரி காய்களை நகர்த்திக் கொண்டிருக்கிறார்...";
-            }
-        }
-
-        // Canvas Interaction
-        async function handleCanvasClick(e) {
-            if (!roomDocRef || gameState.turn !== myRole || gameState.status !== 'active') return;
-            if (!gameState.diceRolled || gameState.remainingSteps <= 0) {
-                showNotification("Roll Dice", "நகர்த்துவதற்கு முன் பகடையை உருட்டவும்!");
-                return;
-            }
-
-            const rect = canvas.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
-
-            const gridX = Math.floor(clickX / CELL_SIZE);
-            const gridY = Math.floor(clickY / CELL_SIZE);
-
-            if (gridX < 0 || gridX >= COLS || gridY < 0 || gridY >= ROWS) return;
-
-            // Select active plane owned by player
-            const clickedPlane = (gameState.planes || []).find(p => p.active && p.player === myRole && p.x === gridX && p.y === gridY);
-
-            if (clickedPlane) {
-                await updateDoc(roomDocRef, { selectedPlaneId: clickedPlane.id });
-                window.playSound('step');
-                return;
-            }
-
-            // Move Selected Plane
-            if (gameState.selectedPlaneId) {
-                const plane = gameState.planes.find(p => p.id === gameState.selectedPlaneId);
-                if (!plane || !plane.active) return;
-
-                const dist = Math.abs(plane.x - gridX) + Math.abs(plane.y - gridY);
-                
-                // Allow moving 1 cell per click step
-                if (dist === 1) {
-                    let updatedPlanes = [...gameState.planes];
-                    const targetPlaneIndex = updatedPlanes.findIndex(p => p.active && p.x === gridX && p.y === gridY);
-
-                    if (targetPlaneIndex !== -1) {
-                        const targetPlane = updatedPlanes[targetPlaneIndex];
-                        if (targetPlane.player === myRole) return; // Cannot land on own plane
-
-                        // Attack Enemy Plane
-                        updatedPlanes[targetPlaneIndex].active = false;
-                        window.playSound('hit');
-                    } else {
-                        window.playSound('step');
-                    }
-
-                    // Move plane
-                    const pIdx = updatedPlanes.findIndex(p => p.id === plane.id);
-                    updatedPlanes[pIdx].x = gridX;
-                    updatedPlanes[pIdx].y = gridY;
-
-                    let nextSteps = gameState.remainingSteps - 1;
-                    let nextTurn = gameState.turn;
-                    let nextDiceRolled = gameState.diceRolled;
-
-                    // Switch turn when steps expire
-                    if (nextSteps <= 0) {
-                        nextSteps = 0;
-                        nextDiceRolled = false;
-                        nextTurn = myRole === 'red' ? 'blue' : 'red';
-                    }
-
-                    // Check Win Condition
-                    const redAlive = updatedPlanes.some(p => p.player === 'red' && p.active);
-                    const blueAlive = updatedPlanes.some(p => p.player === 'blue' && p.active);
-
-                    let winTeam = null;
-                    let gameStatus = 'active';
-
-                    if (!redAlive) {
-                        winTeam = 'blue';
-                        gameStatus = 'finished';
-                    } else if (!blueAlive) {
-                        winTeam = 'red';
-                        gameStatus = 'finished';
-                    }
-
-                    await updateDoc(roomDocRef, {
-                        planes: updatedPlanes,
-                        remainingSteps: nextSteps,
-                        diceRolled: nextDiceRolled,
-                        turn: nextTurn,
-                        status: gameStatus,
-                        winner: winTeam,
-                        updatedAt: Date.now()
-                    });
-                }
-            }
-        }
-
-        // Render Game Graphics
-        function drawBoard() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw Board Grid Lines
-            ctx.strokeStyle = '#e2e8f0';
-            ctx.lineWidth = 1;
-            for (let c = 0; c <= COLS; c++) {
-                ctx.beginPath();
-                ctx.moveTo(c * CELL_SIZE, 0);
-                ctx.lineTo(c * CELL_SIZE, ROWS * CELL_SIZE);
-                ctx.stroke();
-            }
-            for (let r = 0; r <= ROWS; r++) {
-                ctx.beginPath();
-                ctx.moveTo(0, r * CELL_SIZE);
-                ctx.lineTo(COLS * CELL_SIZE, r * CELL_SIZE);
-                ctx.stroke();
-            }
-
-            // Highlight Valid Moves
-            if (gameState.selectedPlaneId && gameState.turn === myRole && gameState.remainingSteps > 0) {
-                const selPlane = (gameState.planes || []).find(p => p.id === gameState.selectedPlaneId);
-                if (selPlane && selPlane.active) {
-                    const neighbors = [
-                        {x: selPlane.x+1, y: selPlane.y},
-                        {x: selPlane.x-1, y: selPlane.y},
-                        {x: selPlane.x, y: selPlane.y+1},
-                        {x: selPlane.x, y: selPlane.y-1}
-                    ];
-
-                    ctx.fillStyle = 'rgba(74, 222, 128, 0.35)';
-                    neighbors.forEach(n => {
-                        if (n.x >= 0 && n.x < COLS && n.y >= 0 && n.y < ROWS) {
-                            ctx.fillRect(n.x * CELL_SIZE, n.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-                        }
-                    });
-                }
-            }
-
-            // Draw Paper Airplanes
-            (gameState.planes || []).forEach(p => {
-                if (!p.active) return;
-
-                const cx = p.x * CELL_SIZE + CELL_SIZE / 2;
-                const cy = p.y * CELL_SIZE + CELL_SIZE / 2;
-
-                const isSelected = p.id === gameState.selectedPlaneId;
-
-                ctx.save();
-                ctx.translate(cx, cy);
-
-                if (isSelected) {
-                    ctx.strokeStyle = '#3b82f6';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.arc(0, 0, CELL_SIZE / 2 + 2, 0, Math.PI * 2);
-                    ctx.stroke();
-                }
-
-                // Airplanes Shapes
-                ctx.fillStyle = p.player === 'red' ? '#ef4444' : '#3b82f6';
-                ctx.beginPath();
-                if (p.player === 'red') {
-                    ctx.moveTo(0, CELL_SIZE * 0.35);
-                    ctx.lineTo(-CELL_SIZE * 0.35, -CELL_SIZE * 0.35);
-                    ctx.lineTo(0, -CELL_SIZE * 0.1);
-                    ctx.lineTo(CELL_SIZE * 0.35, -CELL_SIZE * 0.35);
-                } else {
-                    ctx.moveTo(0, -CELL_SIZE * 0.35);
-                    ctx.lineTo(-CELL_SIZE * 0.35, CELL_SIZE * 0.35);
-                    ctx.lineTo(0, CELL_SIZE * 0.1);
-                    ctx.lineTo(CELL_SIZE * 0.35, CELL_SIZE * 0.35);
-                }
-                ctx.closePath();
-                ctx.fill();
-
-                ctx.restore();
-            });
-        }
-
-        // Realtime Chat & Reaction System
         window.handleSendChat = async function(e) {
             e.preventDefault();
             const input = document.getElementById('chat-input');
-            const msg = input.value.trim();
-            if (!msg || !roomDocRef) return;
-
-            const newChat = [...(gameState.chatMessages || []), {
-                sender: myName,
-                text: msg,
-                time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-            }];
-
-            await updateDoc(roomDocRef, {
-                chatMessages: newChat,
-                updatedAt: Date.now()
-            });
+            const text = input.value.trim();
+            if (!text || !roomDocRef) return;
 
             input.value = '';
-            window.playSound('chat');
+            const senderName = gameState.players[myRole]?.name || myRole;
+            const newMsg = {
+                sender: myRole,
+                senderName: senderName,
+                text: text,
+                isSticker: false,
+                timestamp: Date.now()
+            };
+
+            const updatedMsgs = [...(gameState.chatMessages || []), newMsg];
+            try {
+                await updateDoc(roomDocRef, { chatMessages: updatedMsgs });
+                window.playSound('chat');
+            } catch (err) {
+                console.error("Chat error:", err);
+            }
         };
 
         window.sendSticker = async function(emoji) {
             if (!roomDocRef) return;
+            const stickerObj = {
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                emoji: emoji,
+                senderRole: myRole
+            };
 
-            await updateDoc(roomDocRef, {
-                lastSticker: {
-                    id: Date.now() + Math.random(),
-                    emoji: emoji,
-                    sender: myName
-                },
-                updatedAt: Date.now()
-            });
+            const senderName = gameState.players[myRole]?.name || myRole;
+
+            const updatedMsgs = [...(gameState.chatMessages || []), {
+                sender: myRole,
+                senderName: senderName,
+                text: emoji,
+                isSticker: true,
+                timestamp: Date.now()
+            }];
+
+            try {
+                await updateDoc(roomDocRef, {
+                    lastSticker: stickerObj,
+                    chatMessages: updatedMsgs
+                });
+                window.playSound('chat');
+            } catch (err) {
+                console.error("Sticker error:", err);
+            }
         };
 
-        function showFloatingSticker(emoji, sender) {
-            const layer = document.getElementById('sticker-layer');
+        function displayAnimatedSticker(emoji, senderRole) {
+            const container = document.getElementById('sticker-layer');
             const stickerEl = document.createElement('div');
-            stickerEl.className = 'floating-sticker flex flex-col items-center justify-center';
-            stickerEl.innerHTML = `
-                <span class="text-5xl drop-shadow-lg">${emoji}</span>
-                <span class="text-[10px] font-bold bg-slate-900/80 text-white px-2 py-0.5 rounded-full mt-1">${sender}</span>
-            `;
-            layer.appendChild(stickerEl);
+            stickerEl.className = 'floating-sticker absolute text-5xl z-30 select-none filter drop-shadow-lg';
+            stickerEl.style.top = `${30 + Math.random() * 40}%`;
+            stickerEl.style.left = `${30 + Math.random() * 40}%`;
+            stickerEl.innerText = emoji;
+
+            container.appendChild(stickerEl);
             window.playSound('chat');
 
             setTimeout(() => {
-                if (layer.contains(stickerEl)) {
-                    layer.removeChild(stickerEl);
+                if (stickerEl.parentNode) {
+                    stickerEl.parentNode.removeChild(stickerEl);
                 }
-            }, 2200);
+            }, 2300);
         }
 
-        function renderChat(messages) {
-            const chatBox = document.getElementById('chat-messages');
-            chatBox.innerHTML = '';
-            messages.forEach(m => {
-                const div = document.createElement('div');
-                if (m.sender === 'System') {
-                    div.className = 'text-center text-[10px] text-slate-400 font-medium my-1';
-                    div.innerText = m.text;
+        function renderChatMessages() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '<div class="text-center text-slate-400 text-[10px] my-0.5">--- Battle Chat Room ---</div>';
+
+            gameState.chatMessages.forEach(msg => {
+                const msgEl = document.createElement('div');
+                const isMe = msg.sender === myRole;
+                const senderColor = PLAYER_COLORS[msg.sender]?.primary || '#64748b';
+                
+                const displayName = msg.senderName || (msg.sender ? msg.sender.toUpperCase() : 'PLAYER');
+
+                if (isMe) {
+                    msgEl.className = 'text-right my-0.5';
+                    if (msg.isSticker) {
+                        msgEl.innerHTML = `<span class="inline-block text-2xl p-0.5 animate-bounce">${escapeHtml(msg.text)}</span>`;
+                    } else {
+                        msgEl.innerHTML = `<span class="inline-block bg-indigo-600 text-white rounded-xl px-2.5 py-1 text-left shadow-sm">${escapeHtml(msg.text)}</span>`;
+                    }
                 } else {
-                    const isMe = m.sender === myName;
-                    div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
-                    div.innerHTML = `
-                        <div class="${isMe ? 'bg-indigo-600 text-white' : 'bg-white text-slate-800 border border-slate-200'} px-2.5 py-1.5 rounded-xl max-w-[85%] shadow-sm">
-                            <span class="block text-[9px] font-bold opacity-75">${m.sender}</span>
-                            <span class="text-xs">${m.text}</span>
-                        </div>
-                    `;
+                    msgEl.className = 'text-left my-0.5';
+                    if (msg.isSticker) {
+                        msgEl.innerHTML = `
+                            <span class="block text-[8px] font-bold" style="color:${senderColor}">${escapeHtml(displayName)}</span>
+                            <span class="inline-block text-2xl p-0.5 animate-bounce">${escapeHtml(msg.text)}</span>
+                        `;
+                    } else {
+                        msgEl.innerHTML = `
+                            <span class="block text-[8px] font-bold" style="color:${senderColor}">${escapeHtml(displayName)}</span>
+                            <span class="inline-block bg-white border border-slate-200 text-slate-800 rounded-xl px-2.5 py-1 text-left shadow-sm">${escapeHtml(msg.text)}</span>
+                        `;
+                    }
                 }
-                chatBox.appendChild(div);
+                container.appendChild(msgEl);
             });
-            chatBox.scrollTop = chatBox.scrollHeight;
+            container.scrollTop = container.scrollHeight;
         }
 
-        function showGameOverModal(winner) {
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function showGameOverModal(winnerRole) {
             const modal = document.getElementById('gameover-modal');
+            const trophy = document.getElementById('winner-trophy');
             const title = document.getElementById('winner-title');
             const msg = document.getElementById('winner-message');
-            const trophy = document.getElementById('winner-trophy');
 
-            if (winner === myRole) {
-                title.innerText = '🎉 வெற்றி பெற்றீர்கள்!';
-                msg.innerText = 'எதிரியின் அனைத்து போர் விமானங்களையும் வெற்றிகரமாக அழித்துவிட்டீர்கள்!';
-                trophy.className = 'w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-lg animate-bounce';
-            } else {
-                title.innerText = '💥 தோல்வி!';
-                msg.innerText = 'உங்கள் போர் விமானங்கள் அனைத்தும் அழிக்கப்பட்டுவிட்டன.';
-                trophy.className = 'w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-lg';
-            }
             modal.classList.remove('hidden');
+
+            const isWinner = winnerRole === myRole;
+            const winnerName = gameState.players[winnerRole]?.name || winnerRole.toUpperCase();
+
+            trophy.className = `w-16 h-16 ${PLAYER_COLORS[winnerRole]?.bg || 'bg-indigo-500'} text-white rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-xl animate-bounce`;
+            title.innerText = isWinner ? "🎉 VICTORY! 🎉" : "💥 DEFEAT! 💥";
+            msg.innerText = isWinner ? `Congratulations! You (${winnerName}) destroyed all rival fleets!` : `${winnerName} (${winnerRole.toUpperCase()}) won the air battle!`;
         }
 
         window.restartGame = async function() {
             if (!roomDocRef) return;
+            document.getElementById('gameover-modal').classList.add('hidden');
+
             await updateDoc(roomDocRef, {
                 status: 'active',
                 turn: 'red',
@@ -919,12 +789,492 @@
                 diceRolled: false,
                 diceValue: 0,
                 remainingSteps: 0,
-                selectedPlaneId: null,
-                planes: getDefaultPlanes(),
-                updatedAt: Date.now()
+                planes: getDefaultPlanes(gameState.maxPlayers),
+                lines: []
             });
-            document.getElementById('gameover-modal').classList.add('hidden');
         };
+
+        function updateRoleBadge() {
+            const badge = document.getElementById('role-badge');
+            document.getElementById('display-room-code').innerText = currentRoomId;
+            document.getElementById('room-code-badge').classList.remove('hidden');
+            document.getElementById('player-count-display').innerText = `${gameState.maxPlayers}-Player Mode`;
+
+            const displayName = gameState.players[myRole]?.name || 'Pilot';
+
+            if (myRole && PLAYER_COLORS[myRole]) {
+                badge.className = `px-2.5 py-1 text-white text-xs font-bold rounded-xl shadow ${PLAYER_COLORS[myRole].bg}`;
+                badge.innerText = `You: ${displayName} (${myRole.toUpperCase()})`;
+            }
+
+            // Stat Cards Visibility
+            const activeRoles = PLAYER_ORDER.slice(0, gameState.maxPlayers);
+            PLAYER_ORDER.forEach(r => {
+                const card = document.getElementById(`${r}-stat-card`);
+                if (activeRoles.includes(r)) {
+                    card.classList.remove('hidden');
+                    document.getElementById(`${r}-name-display`).innerText = gameState.players[r]?.name || r;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        function updateUI() {
+            const badge = document.getElementById('turn-badge');
+            const rollBtn = document.getElementById('roll-btn');
+            const diceBox = document.getElementById('dice-box');
+            const msgBox = document.getElementById('game-message');
+
+            const currentTurnRole = gameState.turn;
+            const currentTurnName = gameState.players[currentTurnRole]?.name || currentTurnRole.toUpperCase();
+
+            badge.style.backgroundColor = PLAYER_COLORS[currentTurnRole]?.primary + '20';
+            badge.style.color = PLAYER_COLORS[currentTurnRole]?.primary;
+            badge.innerText = `${currentTurnName}'s Turn`;
+
+            diceBox.innerText = gameState.diceValue > 0 ? gameState.diceValue : '-';
+
+            // Plane Counts
+            PLAYER_ORDER.slice(0, gameState.maxPlayers).forEach(r => {
+                const count = gameState.planes.filter(p => p.player === r && p.active).length;
+                document.getElementById(`${r}-planes-count`).innerText = count;
+            });
+
+            const isMyTurn = gameState.turn === myRole;
+
+            if (gameState.status === 'finished') {
+                rollBtn.disabled = true;
+                msgBox.innerText = `Game Finished! ${currentTurnName} won!`;
+            } else if (gameState.status === 'waiting') {
+                rollBtn.disabled = true;
+                msgBox.innerText = `Waiting for players to join (${gameState.maxPlayers} player mode). Room: ${currentRoomId}`;
+            } else if (!isMyTurn) {
+                rollBtn.disabled = true;
+                msgBox.innerText = `Waiting for opponent (${currentTurnName}) to play...`;
+            } else {
+                if (!gameState.diceRolled) {
+                    rollBtn.disabled = false;
+                    msgBox.innerText = `YOUR turn! Click 'Roll Dice' to start move.`;
+                } else {
+                    rollBtn.disabled = true;
+                    if (!gameState.selectedPlaneId) {
+                        msgBox.innerText = `Dice value: ${gameState.diceValue}. Tap one of your planes to move!`;
+                    } else {
+                        msgBox.innerText = `Steps remaining: ${gameState.remainingSteps}. Tap adjacent grid dot!`;
+                    }
+                }
+            }
+        }
+
+        window.rollDice = async function() {
+            if (gameState.turn !== myRole || gameState.diceRolled || gameState.status !== 'active') return;
+
+            window.playSound('roll');
+            const diceBox = document.getElementById('dice-box');
+            diceBox.classList.add('rolling');
+
+            const val = Math.floor(Math.random() * 6) + 1;
+
+            setTimeout(async () => {
+                diceBox.classList.remove('rolling');
+                gameState.diceValue = val;
+                gameState.diceRolled = true;
+                gameState.remainingSteps = val;
+
+                await updateDoc(roomDocRef, {
+                    diceValue: val,
+                    diceRolled: true,
+                    remainingSteps: val
+                });
+
+                updateUI();
+            }, 500);
+        };
+
+        function triggerExplosion(x, y, color = '#f97316') {
+            window.playSound('clash');
+            for (let i = 0; i < 16; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 4;
+                gameState.clashPoints.push({
+                    x: x * CELL_SIZE,
+                    y: y * CELL_SIZE,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    radius: 3 + Math.random() * 3,
+                    color: color,
+                    life: 1.0
+                });
+            }
+        }
+
+        function isClashPoint(fromPt, toPt) {
+            const hitsPlane = gameState.planes.some(p => p.player !== gameState.turn && p.active && p.x === toPt.x && p.y === toPt.y);
+            if (hitsPlane) return true;
+
+            for (const line of gameState.lines) {
+                if (line.player !== gameState.turn) {
+                    const touchPoint = (line.from.x === toPt.x && line.from.y === toPt.y) || 
+                                       (line.to.x === toPt.x && line.to.y === toPt.y);
+                    const crosses = linesIntersect(fromPt, toPt, line.from, line.to);
+                    if (touchPoint || crosses) return true;
+                }
+            }
+            return false;
+        }
+
+        function handleCanvasInteraction(event) {
+            if (gameState.turn !== myRole || gameState.status !== 'active') return;
+
+            if (!gameState.diceRolled) {
+                window.showNotification("Roll Required", "Please roll dice first!", "error");
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+
+            const gridX = Math.round(clickX / CELL_SIZE);
+            const gridY = Math.round(clickY / CELL_SIZE);
+
+            if (gridX < 0 || gridX > COLS || gridY < 0 || gridY > ROWS) return;
+
+            if (!gameState.selectedPlaneId) {
+                const clickedPlane = gameState.planes.find(p => p.player === gameState.turn && p.active && p.x === gridX && p.y === gridY);
+                if (clickedPlane) {
+                    gameState.selectedPlaneId = clickedPlane.id;
+                    gameState.currentPath = [{ x: clickedPlane.x, y: clickedPlane.y }];
+                    window.playSound('step');
+                    updateUI();
+                } else {
+                    window.showNotification("Selection Error", "Tap on one of your active airplanes.", "error");
+                }
+                return;
+            }
+
+            const currentHead = gameState.currentPath[gameState.currentPath.length - 1];
+            const dx = Math.abs(gridX - currentHead.x);
+            const dy = Math.abs(gridY - currentHead.y);
+
+            if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1) || (dx === 1 && dy === 1)) {
+                const alreadyVisited = gameState.currentPath.some(pt => pt.x === gridX && pt.y === gridY);
+                if (alreadyVisited) {
+                    window.playSound('error');
+                    window.showNotification("Invalid Move", "Cannot revisit same vertex.", "error");
+                    return;
+                }
+
+                const destination = { x: gridX, y: gridY };
+                const causesClash = isClashPoint(currentHead, destination);
+
+                if (causesClash && gameState.remainingSteps > 1) {
+                    window.playSound('error');
+                    window.showNotification("Clash Blocked!", `Clash requires EXACT step match on final move.`, "error");
+                    return;
+                }
+
+                window.playSound('step');
+                gameState.currentPath.push(destination);
+                gameState.remainingSteps--;
+
+                if (causesClash) {
+                    checkStepClashAndCollisions(currentHead, destination);
+                }
+
+                if (gameState.remainingSteps === 0) {
+                    commitMove();
+                } else {
+                    updateUI();
+                }
+            }
+        }
+
+        function linesIntersect(p0, p1, p2, p3) {
+            function ccw(A, B, C) {
+                return (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x);
+            }
+            return (ccw(p0, p2, p3) !== ccw(p1, p2, p3)) && (ccw(p0, p1, p2) !== ccw(p0, p1, p3));
+        }
+
+        function checkStepClashAndCollisions(fromPt, toPt) {
+            gameState.planes.forEach(plane => {
+                if (plane.player !== gameState.turn && plane.active) {
+                    if (plane.x === toPt.x && plane.y === toPt.y) {
+                        plane.active = false;
+                        window.playSound('hit');
+                        triggerExplosion(toPt.x, toPt.y, '#ef4444');
+                    }
+                }
+            });
+
+            for (let i = gameState.lines.length - 1; i >= 0; i--) {
+                const line = gameState.lines[i];
+                if (line.player !== gameState.turn) {
+                    const touchPoint = (line.from.x === toPt.x && line.from.y === toPt.y) || 
+                                       (line.to.x === toPt.x && line.to.y === toPt.y);
+                    const crosses = linesIntersect(fromPt, toPt, line.from, line.to);
+
+                    if (touchPoint || crosses) {
+                        gameState.lines.splice(i, 1);
+                        triggerExplosion(toPt.x, toPt.y, '#eab308');
+                    }
+                }
+            }
+        }
+
+        function getNextTurnRole(current) {
+            const activeRoles = PLAYER_ORDER.slice(0, gameState.maxPlayers);
+            let idx = activeRoles.indexOf(current);
+            
+            // Loop until we find a player who still has active planes
+            for (let i = 1; i <= activeRoles.length; i++) {
+                const nextIdx = (idx + i) % activeRoles.length;
+                const nextRole = activeRoles[nextIdx];
+                const hasPlanes = gameState.planes.some(p => p.player === nextRole && p.active);
+                if (hasPlanes) return nextRole;
+            }
+            return current;
+        }
+
+        async function commitMove() {
+            const playerColor = PLAYER_COLORS[gameState.turn]?.primary || '#6366f1';
+            const updatedLines = [...gameState.lines];
+
+            for (let i = 0; i < gameState.currentPath.length - 1; i++) {
+                updatedLines.push({
+                    from: gameState.currentPath[i],
+                    to: gameState.currentPath[i+1],
+                    color: playerColor,
+                    player: gameState.turn
+                });
+            }
+
+            const finalPt = gameState.currentPath[gameState.currentPath.length - 1];
+            const updatedPlanes = gameState.planes.map(p => {
+                if (p.id === gameState.selectedPlaneId && p.active) {
+                    return { ...p, x: finalPt.x, y: finalPt.y };
+                }
+                return p;
+            });
+
+            // Calculate active surviving teams
+            const activeRoles = PLAYER_ORDER.slice(0, gameState.maxPlayers);
+            const survivingRoles = activeRoles.filter(role => 
+                updatedPlanes.some(p => p.player === role && p.active)
+            );
+
+            let winner = null;
+            let status = 'active';
+
+            if (survivingRoles.length === 1) {
+                winner = survivingRoles[0];
+                status = 'finished';
+            }
+
+            const nextTurn = getNextTurnRole(gameState.turn);
+
+            gameState.selectedPlaneId = null;
+            gameState.currentPath = [];
+
+            try {
+                await updateDoc(roomDocRef, {
+                    lines: updatedLines,
+                    planes: updatedPlanes,
+                    turn: nextTurn,
+                    status: status,
+                    winner: winner,
+                    diceRolled: false,
+                    diceValue: 0,
+                    remainingSteps: 0,
+                    lastExplosion: { x: finalPt.x, y: finalPt.y, color: playerColor }
+                });
+            } catch (err) {
+                console.error("Error committing move:", err);
+            }
+        }
+
+        function updateParticles() {
+            for (let i = gameState.clashPoints.length - 1; i >= 0; i--) {
+                const p = gameState.clashPoints[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.03;
+                if (p.life <= 0) {
+                    gameState.clashPoints.splice(i, 1);
+                }
+            }
+        }
+
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Grid Background
+            ctx.fillStyle = 'rgba(241, 245, 249, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid Lines
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+
+            for (let x = 0; x <= canvas.width; x += CELL_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+
+            for (let y = 0; y <= canvas.height; y += CELL_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Draw Dots
+            ctx.fillStyle = '#cbd5e1';
+            for (let x = 0; x <= COLS; x++) {
+                for (let y = 0; y <= ROWS; y++) {
+                    ctx.beginPath();
+                    ctx.arc(x * CELL_SIZE, y * CELL_SIZE, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Move Step Indicators
+            if (gameState.selectedPlaneId && gameState.remainingSteps > 0 && gameState.currentPath.length > 0) {
+                const head = gameState.currentPath[gameState.currentPath.length - 1];
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        if (dx === 0 && dy === 0) continue;
+                        const nx = head.x + dx;
+                        const ny = head.y + dy;
+
+                        if (nx >= 0 && nx <= COLS && ny >= 0 && ny <= ROWS) {
+                            const causesClash = isClashPoint(head, { x: nx, y: ny });
+                            ctx.beginPath();
+                            ctx.arc(nx * CELL_SIZE, ny * CELL_SIZE, 4, 0, Math.PI * 2);
+                            if (causesClash) {
+                                ctx.fillStyle = gameState.remainingSteps === 1 ? '#eab308' : '#ef4444';
+                            } else {
+                                ctx.fillStyle = '#22c55e';
+                            }
+                            ctx.fill();
+                        }
+                    }
+                }
+            }
+
+            // Travel Lines
+            gameState.lines.forEach(line => {
+                ctx.strokeStyle = line.color;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(line.from.x * CELL_SIZE, line.from.y * CELL_SIZE);
+                ctx.lineTo(line.to.x * CELL_SIZE, line.to.y * CELL_SIZE);
+                ctx.stroke();
+            });
+
+            // Path Move Preview
+            if (gameState.currentPath.length > 1) {
+                ctx.strokeStyle = PLAYER_COLORS[gameState.turn]?.primary || '#6366f1';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(gameState.currentPath[0].x * CELL_SIZE, gameState.currentPath[0].y * CELL_SIZE);
+                for (let i = 1; i < gameState.currentPath.length; i++) {
+                    ctx.lineTo(gameState.currentPath[i].x * CELL_SIZE, gameState.currentPath[i].y * CELL_SIZE);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Explosion Particles
+            gameState.clashPoints.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Draw Airplanes
+            gameState.planes.forEach(plane => {
+                if (!plane.active) return;
+                const px = plane.x * CELL_SIZE;
+                const py = plane.y * CELL_SIZE;
+                const isSelected = gameState.selectedPlaneId === plane.id;
+
+                ctx.save();
+                ctx.translate(px, py);
+
+                if (plane.player === 'red') ctx.rotate(Math.PI);
+                else if (plane.player === 'green') ctx.rotate(Math.PI / 2);
+                else if (plane.player === 'yellow') ctx.rotate(-Math.PI / 2);
+
+                if (isSelected) {
+                    ctx.strokeStyle = '#6366f1';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 18, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                const primaryWingColor = PLAYER_COLORS[plane.player]?.primary || '#6366f1';
+                const darkWingColor = PLAYER_COLORS[plane.player]?.dark || '#4f46e5';
+
+                const scale = CELL_SIZE / 32;
+                ctx.scale(scale, scale);
+
+                // Wings
+                ctx.fillStyle = primaryWingColor;
+                ctx.beginPath();
+                ctx.moveTo(-3, -8);
+                ctx.lineTo(-20, 8);
+                ctx.lineTo(-20, 12);
+                ctx.lineTo(-3, 3);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = darkWingColor;
+                ctx.beginPath();
+                ctx.moveTo(3, -8);
+                ctx.lineTo(20, 8);
+                ctx.lineTo(20, 12);
+                ctx.lineTo(3, 3);
+                ctx.closePath();
+                ctx.fill();
+
+                // Fuselage
+                ctx.fillStyle = '#f8fafc';
+                ctx.beginPath();
+                ctx.moveTo(0, -18);
+                ctx.bezierCurveTo(-4, -12, -4, 10, 0, 18);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#e2e8f0';
+                ctx.beginPath();
+                ctx.moveTo(0, -18);
+                ctx.bezierCurveTo(4, -12, 4, 10, 0, 18);
+                ctx.closePath();
+                ctx.fill();
+
+                // Cockpit
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.moveTo(-3, -10);
+                ctx.quadraticCurveTo(0, -14, 3, -10);
+                ctx.quadraticCurveTo(0, -8, -3, -10);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+            });
+        }
     </script>
 </body>
 </html>
