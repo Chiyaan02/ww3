@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Paper Airplane Combat - Ultimate Warfare</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            touch-action: manipulation;
+        }
+
+        /* Tactical Notebook / Radar Grid Background */
+        .grid-paper {
+            background-color: #1e293b;
+            background-image: 
+                linear-gradient(to right, rgba(51, 65, 85, 0.4) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(51, 65, 85, 0.4) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+
+        @keyframes dice-roll {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.15); }
+            50% { transform: rotate(180deg) scale(0.85); }
+            75% { transform: rotate(270deg) scale(1.15); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .rolling {
+            animation: dice-roll 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes pop-float {
+            0% { transform: scale(0.3) translateY(20px); opacity: 0; }
+            30% { transform: scale(1.3) translateY(-10px); opacity: 1; }
+            70% { transform: scale(1) translateY(-30px); opacity: 1; }
+            100% { transform: scale(0.8) translateY(-60px); opacity: 0; }
+        }
+
+        .floating-sticker {
+            animation: pop-float 2.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .chat-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-scroll::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-2 md:p-4 select-none">
+
+    <!-- Header Section -->
+    <header class="w-full max-w-6xl bg-slate-800/90 backdrop-blur-md shadow-xl rounded-2xl p-3 md:p-4 mb-2 flex flex-wrap justify-between items-center border border-slate-700 gap-2">
+        <div class="flex items-center space-x-2.5">
+            <div class="bg-gradient-to-tr from-indigo-600 to-violet-500 text-white p-2.5 rounded-xl shadow-lg animate-pulse">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-base md:text-xl font-black bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 bg-clip-text text-transparent uppercase tracking-wider">Paper Airplane Warfare</h1>
+                <p class="text-[10px] md:text-xs text-slate-400">Class Planes • Voice Lines • Multiplayer & AI</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 flex-wrap gap-1.5">
+            <div id="room-code-badge" class="hidden px-2.5 py-1 bg-slate-900 border border-indigo-500/40 text-indigo-300 text-xs font-bold rounded-xl flex items-center gap-1.5">
+                <span>Room: <strong id="display-room-code" class="text-cyan-400 font-mono">----</strong></span>
+                <button onclick="copyRoomCode()" class="text-[10px] bg-indigo-900/60 hover:bg-indigo-800 px-1.5 py-0.5 rounded text-indigo-200 transition">📋 Copy</button>
+            </div>
+
+            <div id="role-badge" class="px-2.5 py-1 bg-slate-900 text-slate-300 text-xs font-bold rounded-xl border border-slate-700">
+                Offline Mode
+            </div>
+
+            <button onclick="showCredits()" class="px-2.5 py-1 bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-500/40 text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-1">
+                ⭐ Credits
+            </button>
+
+            <button id="sound-btn" onclick="toggleAudio()" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl transition shadow-sm">
+                🔊 Sound: On
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Section -->
+    <main class="w-full max-w-6xl flex flex-col lg:flex-row gap-3 flex-grow items-stretch justify-center">
+        
+        <!-- Sidebar Controls & Fleet Status -->
+        <div class="w-full lg:w-80 bg-slate-800/80 backdrop-blur-md rounded-2xl shadow-xl p-3 md:p-4 flex flex-col justify-between border border-slate-700">
+            <div>
+                <h2 class="text-xs md:text-sm font-bold text-slate-300 mb-2 pb-2 border-b border-slate-700/80 flex items-center justify-between">
+                    <span>Tactical Status</span>
+                    <span id="turn-badge" class="text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider bg-red-900/80 text-red-300 border border-red-500/40">Red's Turn</span>
+                </h2>
+
+                <!-- Fleet Stats -->
+                <div id="fleet-stats-container" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 mb-3">
+                    <div id="red-stat-card" class="bg-red-950/40 border border-red-500/40 p-2 rounded-xl text-center">
+                        <span id="red-name-display" class="block text-[10px] font-bold text-red-400 truncate">Red</span>
+                        <span id="red-planes-count" class="text-lg font-extrabold text-red-300">4</span>
+                        <span class="text-[9px] text-slate-400 block">Planes Left</span>
+                    </div>
+                    <div id="blue-stat-card" class="bg-blue-950/40 border border-blue-500/40 p-2 rounded-xl text-center">
+                        <span id="blue-name-display" class="block text-[10px] font-bold text-blue-400 truncate">Blue</span>
+                        <span id="blue-planes-count" class="text-lg font-extrabold text-blue-300">4</span>
+                        <span class="text-[9px] text-slate-400 block">Planes Left</span>
+                    </div>
+                    <div id="green-stat-card" class="bg-emerald-950/40 border border-emerald-500/40 p-2 rounded-xl text-center">
+                        <span id="green-name-display" class="block text-[10px] font-bold text-emerald-400 truncate">Green</span>
+                        <span id="green-planes-count" class="text-lg font-extrabold text-emerald-300">4</span>
+                        <span class="text-[9px] text-slate-400 block">Planes Left</span>
+                    </div>
+                    <div id="yellow-stat-card" class="bg-amber-950/40 border border-amber-500/40 p-2 rounded-xl text-center">
+                        <span id="yellow-name-display" class="block text-[10px] font-bold text-amber-400 truncate">Yellow</span>
+                        <span id="yellow-planes-count" class="text-lg font-extrabold text-amber-300">4</span>
+                        <span class="text-[9px] text-slate-400 block">Planes Left</span>
+                    </div>
+                </div>
+
+                <!-- Dice Roller -->
+                <div class="bg-slate-900/90 border border-slate-700 rounded-2xl p-3 text-center mb-3 shadow-inner">
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1">🎲 Tactical Flight Dice</h3>
+                    <div class="flex justify-center items-center mb-2">
+                        <div id="dice-box" class="w-14 h-14 bg-slate-800 border-2 border-cyan-500/80 rounded-2xl shadow-lg flex items-center justify-center text-2xl font-black text-cyan-400">
+                            -
+                        </div>
+                    </div>
+                    <button id="roll-btn" onclick="rollDice()" class="w-full py-2.5 bg-gradient-to-r from-cyan-600 via-indigo-600 to-violet-600 hover:from-cyan-500 hover:to-violet-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg transition transform active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">
+                        Roll Flight Dice
+                    </button>
+                </div>
+            </div>
+
+            <!-- Voice Line Callouts Banner -->
+            <div id="voice-banner" class="hidden mb-2 p-2 bg-gradient-to-r from-indigo-900 to-purple-900 border border-indigo-400 text-amber-300 font-black text-xs text-center rounded-xl shadow-lg animate-pulse">
+                🗣️ <span id="voice-text">"Enemy Spotted!"</span>
+            </div>
+
+            <!-- Game Instruction Banner -->
+            <div id="game-message" class="bg-slate-900/80 border border-slate-700 text-slate-300 text-xs rounded-xl p-2.5 font-medium leading-relaxed text-center shadow">
+                Choose game setup and start the aerial war!
+            </div>
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="flex-grow bg-slate-800/80 backdrop-blur-md rounded-2xl shadow-xl p-2 md:p-3 flex flex-col items-center justify-center border border-slate-700 overflow-hidden relative min-h-[380px] md:min-h-[500px]">
+            <div id="sticker-layer" class="absolute inset-0 pointer-events-none z-20 flex items-center justify-center overflow-hidden"></div>
+
+            <div id="canvas-container" class="w-full h-full overflow-auto flex justify-center items-center touch-pan-x touch-pan-y">
+                <canvas id="game-canvas" class="grid-paper rounded-xl shadow-2xl border border-slate-700 cursor-crosshair max-w-full"></canvas>
+            </div>
+            
+            <div class="mt-2 flex items-center justify-between w-full text-[10px] md:text-xs text-slate-400 px-1">
+                <span>⚡ Classic Combat</span>
+                <span id="player-count-display" class="font-bold text-cyan-400">4-Player Tactical War</span>
+            </div>
+        </div>
+
+        <!-- Radio & Comms Chat Sidebar -->
+        <div class="w-full lg:w-72 bg-slate-800/80 backdrop-blur-md rounded-2xl shadow-xl p-3 md:p-4 flex flex-col border border-slate-700 h-64 lg:h-auto">
+            <h3 class="text-xs font-bold text-slate-300 mb-2 pb-1 border-b border-slate-700 flex items-center justify-between">
+                <span>💬 Radio Chatter & Reactions</span>
+            </h3>
+
+            <!-- Quick Voice Buttons -->
+            <div class="mb-2 grid grid-cols-3 gap-1">
+                <button onclick="triggerVoiceLine('Enemy Spotted!')" class="text-[9px] bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-500/40 p-1 rounded-lg font-bold">🎯 Spotted!</button>
+                <button onclick="triggerVoiceLine('Mayday!')" class="text-[9px] bg-amber-950/60 hover:bg-amber-900 text-amber-300 border border-amber-500/40 p-1 rounded-lg font-bold">🚨 Mayday!</button>
+                <button onclick="triggerVoiceLine('Kaboom!')" class="text-[9px] bg-purple-950/60 hover:bg-purple-900 text-purple-300 border border-purple-500/40 p-1 rounded-lg font-bold">💥 Kaboom!</button>
+            </div>
+
+            <!-- Sticker Reaction Grid -->
+            <div class="mb-2">
+                <div class="grid grid-cols-4 gap-1">
+                    <button onclick="sendSticker('🔥')" class="text-base bg-slate-900 hover:bg-amber-900/60 border border-slate-700 p-1 rounded-lg transition active:scale-95 shadow-sm">🔥</button>
+                    <button onclick="sendSticker('👍')" class="text-base bg-slate-900 hover:bg-emerald-900/60 border border-slate-700 p-1 rounded-lg transition active:scale-95 shadow-sm">👍</button>
+                    <button onclick="sendSticker('🚀')" class="text-base bg-slate-900 hover:bg-indigo-900/60 border border-slate-700 p-1 rounded-lg transition active:scale-95 shadow-sm">🚀</button>
+                    <button onclick="sendSticker('💣')" class="text-base bg-slate-900 hover:bg-red-900/60 border border-slate-700 p-1 rounded-lg transition active:scale-95 shadow-sm">💣</button>
+                </div>
+            </div>
+
+            <div id="chat-messages" class="flex-grow bg-slate-900/90 rounded-xl p-2 border border-slate-700 overflow-y-auto text-[11px] space-y-1.5 mb-2 chat-scroll">
+                <div class="text-center text-slate-500 text-[10px] my-0.5">--- Radio Chatter ---</div>
+            </div>
+
+            <form onsubmit="handleSendChat(event)" class="flex gap-1">
+                <input id="chat-input" type="text" placeholder="Comms..." class="flex-grow px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500">
+                <button type="submit" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl shadow transition">
+                    Send
+                </button>
+            </form>
+        </div>
+
+    </main>
+
+    <!-- Lobby Modal -->
+    <div id="lobby-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3">
+        <div class="bg-slate-900 rounded-3xl max-w-lg w-full p-5 shadow-2xl border border-slate-700 text-center text-slate-200 overflow-y-auto max-h-[90vh]">
+            <div class="w-14 h-14 bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-2 text-3xl shadow-lg animate-bounce">
+                🚀
+            </div>
+            <h2 class="text-2xl font-black bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent mb-1">Paper Airplane Warfare</h2>
+            <p class="text-xs text-slate-400 mb-3">Choose Plane Class & Multiplayer Settings!</p>
+
+            <!-- Name Input Field -->
+            <div class="mb-3 text-left">
+                <label class="text-xs font-bold text-slate-300 block mb-1">Pilot Callsign / Name:</label>
+                <input id="player-name-input" type="text" maxlength="15" placeholder="Enter callsign..." class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+            </div>
+
+            <!-- Airplane Class Selection -->
+            <div class="mb-3 text-left">
+                <label class="text-xs font-bold text-slate-300 block mb-1">Airplane Class (விமான வகை):</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="selectPlaneClass('fighter')" id="class-fighter-btn" class="p-2 border-2 border-cyan-500 bg-cyan-950/50 rounded-xl text-left transition hover:bg-cyan-900/40">
+                        <div class="text-xs font-black text-cyan-300">⚡ Fighter Jet</div>
+                        <div class="text-[9px] text-slate-400">வேகமானது (+1 step)</div>
+                    </button>
+                    <button type="button" onclick="selectPlaneClass('armored')" id="class-armored-btn" class="p-2 border-2 border-slate-700 bg-slate-800 rounded-xl text-left transition hover:bg-slate-700">
+                        <div class="text-xs font-black text-amber-300">🛡️ Armored</div>
+                        <div class="text-[9px] text-slate-400">பலமானது (Shield)</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Player Mode Selection -->
+            <div class="mb-4 text-left">
+                <label class="text-xs font-bold text-slate-300 block mb-1">Player Count:</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" onclick="selectPlayerMode(2)" id="mode-2-btn" class="py-1.5 bg-indigo-600 text-white font-bold rounded-xl text-xs shadow">2 Players</button>
+                    <button type="button" onclick="selectPlayerMode(3)" id="mode-3-btn" class="py-1.5 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs hover:bg-slate-700">3 Players</button>
+                    <button type="button" onclick="selectPlayerMode(4)" id="mode-4-btn" class="py-1.5 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs hover:bg-slate-700">4 Players</button>
+                </div>
+            </div>
+
+            <div class="space-y-2.5">
+                <button onclick="startSinglePlayerGame()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95 text-xs flex items-center justify-center gap-2">
+                    🤖 Single Player vs Tactical AI
+                </button>
+
+                <button onclick="createRoom()" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95 text-xs flex items-center justify-center gap-2">
+                    🌐 Create Multiplayer Room
+                </button>
+
+                <div class="flex items-center my-2 text-[10px] text-slate-500">
+                    <div class="flex-grow border-t border-slate-700"></div>
+                    <span class="px-2 uppercase font-semibold">OR JOIN ROOM</span>
+                    <div class="flex-grow border-t border-slate-700"></div>
+                </div>
+
+                <div class="flex gap-2">
+                    <input id="room-input" type="text" maxlength="4" placeholder="4-digit code" class="flex-grow px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-center font-mono text-base uppercase tracking-widest font-bold text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    <button onclick="joinRoom()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl text-xs shadow transition">
+                        Join
+                    </button>
+                </div>
+            </div>
+
+            <!-- Credits Section -->
+            <div class="mt-4 pt-3 border-t border-slate-800">
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Created By</p>
+                <p class="text-xs font-semibold text-cyan-400">JustImagine</p>
+                <div class="flex flex-wrap justify-center gap-1.5 mt-1 text-[10px] text-slate-400 font-medium">
+                    <span class="bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">K.Pirakathies</span>
+                    <span class="bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">Antto Karoshan</span>
+                    <span class="bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">Thisha</span>
+                    <span class="bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">Vinu</span>
+                </div>
+            </div>
+
+            <p id="lobby-error" class="text-xs text-rose-400 font-semibold mt-3 hidden"></p>
+        </div>
+    </div>
+
+    <!-- CREDITS MODAL -->
+    <div id="credits-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center border border-slate-700">
+            <div class="w-14 h-14 bg-amber-950 text-amber-400 border border-amber-500/40 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner animate-bounce">
+                ✨
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-100 mb-1">Game Credits</h3>
+            <p class="text-xs text-slate-400 mb-4">Paper Airplane Warfare Development Team</p>
+
+            <div class="bg-gradient-to-b from-indigo-950/80 to-slate-900 border border-indigo-500/30 rounded-2xl p-4 mb-4 text-center space-y-2">
+                <div class="text-sm font-extrabold text-cyan-300 tracking-wide">
+                    🚀 JustImagine
+                </div>
+                <div class="h-px bg-indigo-500/30 my-2 w-3/4 mx-auto"></div>
+                <div class="space-y-1.5 text-xs text-slate-300 font-semibold">
+                    <div class="bg-slate-800/80 py-1 px-3 rounded-lg border border-slate-700">K.Pirakathies</div>
+                    <div class="bg-slate-800/80 py-1 px-3 rounded-lg border border-slate-700">Antto Karoshan</div>
+                    <div class="bg-slate-800/80 py-1 px-3 rounded-lg border border-slate-700">Thisha</div>
+                    <div class="bg-slate-800/80 py-1 px-3 rounded-lg border border-slate-700">Vinu</div>
+                </div>
+            </div>
+
+            <button onclick="closeCredits()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs shadow-md transition border border-slate-700">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME OVER MODAL -->
+    <div id="gameover-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center border border-slate-700">
+            <div id="winner-trophy" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-xl animate-bounce">
+                🏆
+            </div>
+            <h2 id="winner-title" class="text-xl font-black text-white mb-1">Game Finished!</h2>
+            <p id="winner-message" class="text-xs text-slate-300 mb-5 leading-relaxed">Winner details here...</p>
+            <button onclick="restartGame()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl text-xs shadow-lg transition transform active:scale-95 uppercase tracking-wider">
+                🔄 Play Again
+            </button>
+        </div>
+    </div>
+
+    <!-- Custom Notification Modal -->
+    <div id="notification-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-5 shadow-2xl text-center border border-slate-700">
+            <div id="notification-icon" class="w-10 h-10 bg-cyan-950 text-cyan-400 border border-cyan-500/30 rounded-full flex items-center justify-center mx-auto mb-2 text-lg font-bold">ℹ️</div>
+            <h4 id="notification-title" class="text-base font-bold text-white mb-1">Notice</h4>
+            <p id="notification-message" class="text-xs text-slate-300 mb-4 leading-relaxed">Message goes here...</p>
+            <button onclick="closeNotification()" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl text-xs shadow-md transition">OK</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDE_qI-3uItuj1FHsy7SEWn2YudZnR1cF4",
+            authDomain: "world-war-3-3e98b.firebaseapp.com",
+            projectId: "world-war-3-3e98b",
+            storageBucket: "world-war-3-3e98b.firebasestorage.app",
+            messagingSenderId: "591955421240",
+            appId: "1:591955421240:web:36093e16132f6f7f265ecd",
+            measurementId: "G-VT2ET6RMG4"
+        };
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'airplane-combat-game';
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Grid Dimensions
+        const COLS = 18;
+        const ROWS = 22;
+        let CELL_SIZE = 28;
+
+        let canvas, ctx;
+        let soundEnabled = true;
+        let currentUser = null;
+        let selectedMaxPlayers = 2;
+        let selectedClass = 'fighter'; // 'fighter', 'armored'
+        let isSinglePlayerMode = false;
+        let myRole = 'red';
+        let myName = 'Pilot';
+        let currentRoomId = null;
+        let roomDocRef = null;
+        let unsubscribeRoom = null;
+        let lastProcessedStickerId = null;
+
+        const PLAYER_ORDER = ['red', 'blue', 'green', 'yellow'];
+        const PLAYER_COLORS = {
+            red: { primary: '#ef4444', dark: '#dc2626', bg: 'bg-red-500' },
+            blue: { primary: '#3b82f6', dark: '#2563eb', bg: 'bg-blue-500' },
+            green: { primary: '#10b981', dark: '#059669', bg: 'bg-emerald-500' },
+            yellow: { primary: '#f59e0b', dark: '#d97706', bg: 'bg-amber-500' }
+        };
+
+        // Audio Setup
+        let synth, noiseSynth;
+        function initAudio() {
+            if (!synth) {
+                synth = new Tone.Synth({
+                    oscillator: { type: 'triangle' },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 }
+                }).toDestination();
+
+                noiseSynth = new Tone.NoiseSynth({
+                    noise: { type: 'brown' },
+                    envelope: { attack: 0.005, decay: 0.3, sustain: 0 }
+                }).toDestination();
+            }
+        }
+
+        window.playSound = function(type) {
+            if (!soundEnabled) return;
+            try {
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                initAudio();
+                if (type === 'roll') synth?.triggerAttackRelease('C5', '8n');
+                else if (type === 'step') synth?.triggerAttackRelease('E4', '16n');
+                else if (type === 'clash') noiseSynth?.triggerAttackRelease('8n');
+                else if (type === 'hit') noiseSynth?.triggerAttackRelease('4n');
+                else if (type === 'error') synth?.triggerAttackRelease('G2', '8n');
+                else if (type === 'chat') synth?.triggerAttackRelease('G4', '16n');
+            } catch (e) { console.log("Audio Error", e); }
+        };
+
+        window.triggerVoiceLine = function(text) {
+            if (!soundEnabled) return;
+            const banner = document.getElementById('voice-banner');
+            document.getElementById('voice-text').innerText = `"${text}"`;
+            banner.classList.remove('hidden');
+            setTimeout(() => banner.classList.add('hidden'), 2000);
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.1;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        };
+
+        window.toggleAudio = function() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-btn').innerText = soundEnabled ? '🔊 Sound: On' : '🔇 Sound: Off';
+        };
+
+        window.selectPlaneClass = function(pClass) {
+            selectedClass = pClass;
+            ['fighter', 'armored'].forEach(c => {
+                const btn = document.getElementById(`class-${c}-btn`);
+                if (btn) {
+                    if (c === pClass) {
+                        btn.className = 'p-2 border-2 border-cyan-500 bg-cyan-950/50 rounded-xl text-left transition hover:bg-cyan-900/40';
+                    } else {
+                        btn.className = 'p-2 border-2 border-slate-700 bg-slate-800 rounded-xl text-left transition hover:bg-slate-700';
+                    }
+                }
+            });
+        };
+
+        window.selectPlayerMode = function(count) {
+            selectedMaxPlayers = count;
+            [2, 3, 4].forEach(n => {
+                const btn = document.getElementById(`mode-${n}-btn`);
+                if (n === count) {
+                    btn.className = 'py-1.5 bg-indigo-600 text-white font-bold rounded-xl text-xs shadow';
+                } else {
+                    btn.className = 'py-1.5 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs hover:bg-slate-700';
+                }
+            });
+        };
+
+        function getDefaultPlanes(maxPlayers) {
+            const planes = [];
+
+            // Red Fleet (Plane 2 has Shield)
+            planes.push(
+                { id: 'r1', player: 'red', x: 2, y: 1, active: true, pClass: selectedClass, shielded: false },
+                { id: 'r2', player: 'red', x: 6, y: 1, active: true, pClass: 'armored', shielded: true },
+                { id: 'r3', player: 'red', x: 11, y: 1, active: true, pClass: selectedClass, shielded: false },
+                { id: 'r4', player: 'red', x: 15, y: 1, active: true, pClass: selectedClass, shielded: false }
+            );
+
+            // Blue Fleet (Plane 2 has Shield, all 4 active/visible)
+            planes.push(
+                { id: 'b1', player: 'blue', x: 2, y: 20, active: true, pClass: 'fighter', shielded: false },
+                { id: 'b2', player: 'blue', x: 6, y: 20, active: true, pClass: 'armored', shielded: true },
+                { id: 'b3', player: 'blue', x: 11, y: 20, active: true, pClass: 'fighter', shielded: false },
+                { id: 'b4', player: 'blue', x: 15, y: 20, active: true, pClass: 'fighter', shielded: false }
+            );
+
+            if (maxPlayers >= 3) {
+                // Green Fleet (Plane 2 has Shield)
+                planes.push(
+                    { id: 'g1', player: 'green', x: 1, y: 3, active: true, pClass: 'fighter', shielded: false },
+                    { id: 'g2', player: 'green', x: 1, y: 7, active: true, pClass: 'armored', shielded: true },
+                    { id: 'g3', player: 'green', x: 1, y: 12, active: true, pClass: 'fighter', shielded: false },
+                    { id: 'g4', player: 'green', x: 1, y: 17, active: true, pClass: 'fighter', shielded: false }
+                );
+            }
+
+            if (maxPlayers >= 4) {
+                // Yellow Fleet (Plane 2 has Shield)
+                planes.push(
+                    { id: 'y1', player: 'yellow', x: 17, y: 3, active: true, pClass: 'fighter', shielded: false },
+                    { id: 'y2', player: 'yellow', x: 17, y: 7, active: true, pClass: 'armored', shielded: true },
+                    { id: 'y3', player: 'yellow', x: 17, y: 12, active: true, pClass: 'fighter', shielded: false },
+                    { id: 'y4', player: 'yellow', x: 17, y: 17, active: true, pClass: 'fighter', shielded: false }
+                );
+            }
+
+            return planes;
+        }
+
+        let gameState = {
+            maxPlayers: 2,
+            status: 'waiting',
+            turn: 'red',
+            winner: null,
+            players: {
+                red: { name: 'Red', uid: null },
+                blue: { name: 'Waiting...', uid: null },
+                green: { name: 'Waiting...', uid: null },
+                yellow: { name: 'Waiting...', uid: null }
+            },
+            diceRolled: false,
+            diceValue: 0,
+            remainingSteps: 0,
+            selectedPlaneId: null,
+            currentPath: [],
+            planes: [],
+            lines: [],
+            clashPoints: [],
+            chatMessages: []
+        };
+
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    try {
+                        const userCred = await signInWithCustomToken(auth, __initial_auth_token);
+                        currentUser = userCred.user;
+                        return;
+                    } catch (customTokenError) {
+                        console.warn("Custom token auth failed, using anonymous auth:", customTokenError);
+                    }
+                }
+                const userCred = await signInAnonymously(auth);
+                currentUser = userCred.user;
+            } catch (err) {
+                console.error("Auth init failed:", err);
+            }
+        }
+
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+            const availableWidth = Math.min(container.clientWidth - 10, 600);
+            CELL_SIZE = Math.max(18, Math.floor(availableWidth / COLS));
+            canvas.width = COLS * CELL_SIZE;
+            canvas.height = ROWS * CELL_SIZE;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        window.addEventListener('load', async () => {
+            canvas = document.getElementById('game-canvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+
+            await initAuth();
+
+            canvas.addEventListener('click', handleCanvasInteraction);
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                handleCanvasInteraction(touch);
+            }, { passive: false });
+
+            function animationLoop() {
+                updateParticles();
+                drawBoard();
+                requestAnimationFrame(animationLoop);
+            }
+            requestAnimationFrame(animationLoop);
+        });
+
+        window.showNotification = function(title, message, type = 'info') {
+            document.getElementById('notification-title').innerText = title;
+            document.getElementById('notification-message').innerText = message;
+            document.getElementById('notification-modal').classList.remove('hidden');
+        };
+
+        window.closeNotification = function() {
+            document.getElementById('notification-modal').classList.add('hidden');
+        };
+
+        window.showCredits = function() {
+            document.getElementById('credits-modal').classList.remove('hidden');
+            window.playSound('chat');
+        };
+
+        window.closeCredits = function() {
+            document.getElementById('credits-modal').classList.add('hidden');
+        };
+
+        window.copyRoomCode = function() {
+            if (!currentRoomId || isSinglePlayerMode) return;
+            navigator.clipboard?.writeText(currentRoomId);
+            window.showNotification("Copied!", `Room Code ${currentRoomId} copied!`, "success");
+        };
+
+        function getEnteredPlayerName(defaultFallback) {
+            const inputVal = document.getElementById('player-name-input').value.trim();
+            return inputVal || defaultFallback;
+        }
+
+        window.startSinglePlayerGame = function() {
+            if (unsubscribeRoom) {
+                unsubscribeRoom();
+                unsubscribeRoom = null;
+            }
+            isSinglePlayerMode = true;
+            currentRoomId = 'SOLO';
+            myRole = 'red';
+            myName = getEnteredPlayerName("Commander (You)");
+
+            const activeRoles = PLAYER_ORDER.slice(0, selectedMaxPlayers);
+            const playersObj = {};
+            activeRoles.forEach(r => {
+                if (r === 'red') {
+                    playersObj[r] = { name: myName, uid: 'human' };
+                } else {
+                    playersObj[r] = { name: `Bot ${r.toUpperCase()}`, uid: `bot_${r}` };
+                }
+            });
+
+            gameState = {
+                maxPlayers: selectedMaxPlayers,
+                status: 'active',
+                turn: 'red',
+                winner: null,
+                players: playersObj,
+                diceRolled: false,
+                diceValue: 0,
+                remainingSteps: 0,
+                selectedPlaneId: null,
+                currentPath: [],
+                planes: getDefaultPlanes(selectedMaxPlayers),
+                lines: [],
+                clashPoints: [],
+                chatMessages: [{
+                    sender: 'blue',
+                    senderName: 'System',
+                    text: `Class: ${selectedClass.toUpperCase()}. Eliminate enemy planes to win!`,
+                    isSticker: false,
+                    timestamp: Date.now()
+                }]
+            };
+
+            document.getElementById('lobby-modal').classList.add('hidden');
+            document.getElementById('gameover-modal').classList.add('hidden');
+            updateRoleBadge();
+            updateUI();
+            renderChatMessages();
+            triggerVoiceLine("Enemy Spotted!");
+        };
+
+        window.createRoom = async function() {
+            if (!currentUser) await initAuth();
+            isSinglePlayerMode = false;
+            const roomId = Math.floor(1000 + Math.random() * 9000).toString();
+            currentRoomId = roomId;
+            myRole = 'red';
+            myName = getEnteredPlayerName("Red Commander");
+
+            roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+
+            const initialRoomData = {
+                roomId: roomId,
+                maxPlayers: selectedMaxPlayers,
+                status: 'waiting',
+                turn: 'red',
+                winner: null,
+                players: {
+                    red: { name: myName, uid: currentUser.uid },
+                    blue: { name: 'Waiting...', uid: null },
+                    green: { name: 'Waiting...', uid: null },
+                    yellow: { name: 'Waiting...', uid: null }
+                },
+                diceRolled: false,
+                diceValue: 0,
+                remainingSteps: 0,
+                planes: getDefaultPlanes(selectedMaxPlayers),
+                lines: [],
+                chatMessages: []
+            };
+
+            try {
+                await setDoc(roomDocRef, initialRoomData);
+                listenToRoom(roomId);
+                document.getElementById('lobby-modal').classList.add('hidden');
+                document.getElementById('gameover-modal').classList.add('hidden');
+                updateRoleBadge();
+            } catch (e) {
+                console.error("Error creating room:", e);
+                document.getElementById('lobby-error').innerText = "Failed to create room. Try again.";
+                document.getElementById('lobby-error').classList.remove('hidden');
+            }
+        };
+
+        window.joinRoom = async function() {
+            const input = document.getElementById('room-input').value.trim().toUpperCase();
+            if (input.length !== 4) {
+                document.getElementById('lobby-error').innerText = "Enter valid 4-digit code.";
+                document.getElementById('lobby-error').classList.remove('hidden');
+                return;
+            }
+
+            if (!currentUser) await initAuth();
+
+            isSinglePlayerMode = false;
+            currentRoomId = input;
+            roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', input);
+
+            try {
+                const snap = await getDoc(roomDocRef);
+                if (!snap.exists()) {
+                    document.getElementById('lobby-error').innerText = "Room not found!";
+                    document.getElementById('lobby-error').classList.remove('hidden');
+                    return;
+                }
+
+                const data = snap.data();
+                const players = data.players || {};
+                const maxP = data.maxPlayers || 2;
+
+                let assignedRole = null;
+                const roles = PLAYER_ORDER.slice(0, maxP);
+
+                for (const r of roles) {
+                    if (players[r] && players[r].uid === currentUser.uid) {
+                        assignedRole = r;
+                        break;
+                    }
+                }
+
+                if (!assignedRole) {
+                    for (const r of roles) {
+                        if (!players[r] || !players[r].uid) {
+                            assignedRole = r;
+                            break;
+                        }
+                    }
+                }
+
+                if (!assignedRole) {
+                    document.getElementById('lobby-error').innerText = "Room is full!";
+                    document.getElementById('lobby-error').classList.remove('hidden');
+                    return;
+                }
+
+                myRole = assignedRole;
+                myName = getEnteredPlayerName(`${assignedRole.toUpperCase()} Pilot`);
+
+                players[assignedRole] = { name: myName, uid: currentUser.uid };
+
+                const filledCount = roles.filter(r => players[r] && players[r].uid).length;
+                const newStatus = filledCount >= maxP ? 'active' : 'waiting';
+
+                await updateDoc(roomDocRef, {
+                    players: players,
+                    status: newStatus
+                });
+
+                listenToRoom(input);
+                document.getElementById('lobby-modal').classList.add('hidden');
+                document.getElementById('gameover-modal').classList.add('hidden');
+                updateRoleBadge();
+            } catch (e) {
+                console.error("Error joining room:", e);
+                document.getElementById('lobby-error').innerText = "Failed to join room.";
+                document.getElementById('lobby-error').classList.remove('hidden');
+            }
+        };
+
+        function listenToRoom(roomId) {
+            if (unsubscribeRoom) unsubscribeRoom();
+
+            unsubscribeRoom = onSnapshot(roomDocRef, (snap) => {
+                if (!snap.exists()) return;
+                const data = snap.data();
+
+                gameState.maxPlayers = data.maxPlayers || 2;
+                gameState.status = data.status;
+                gameState.turn = data.turn;
+                gameState.winner = data.winner;
+                gameState.players = data.players || {};
+                gameState.diceRolled = data.diceRolled;
+                gameState.diceValue = data.diceValue;
+                gameState.remainingSteps = data.remainingSteps;
+                gameState.planes = data.planes || [];
+                gameState.lines = data.lines || [];
+                gameState.chatMessages = data.chatMessages || [];
+
+                if (data.lastSticker && data.lastSticker.id !== lastProcessedStickerId) {
+                    lastProcessedStickerId = data.lastSticker.id;
+                    displayAnimatedSticker(data.lastSticker.emoji, data.lastSticker.senderRole);
+                }
+
+                if (data.lastExplosion) {
+                    triggerExplosion(data.lastExplosion.x, data.lastExplosion.y, data.lastExplosion.color);
+                }
+
+                if (gameState.status === 'finished' && gameState.winner) {
+                    showGameOverModal(gameState.winner);
+                }
+
+                updateRoleBadge();
+                updateUI();
+                renderChatMessages();
+            });
+        }
+
+        window.handleSendChat = async function(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            const senderName = gameState.players[myRole]?.name || myRole;
+            const newMsg = {
+                sender: myRole,
+                senderName: senderName,
+                text: text,
+                isSticker: false,
+                timestamp: Date.now()
+            };
+
+            if (isSinglePlayerMode) {
+                gameState.chatMessages.push(newMsg);
+                window.playSound('chat');
+                renderChatMessages();
+            } else if (roomDocRef) {
+                const updatedMsgs = [...(gameState.chatMessages || []), newMsg];
+                try {
+                    await updateDoc(roomDocRef, { chatMessages: updatedMsgs });
+                    window.playSound('chat');
+                } catch (err) {
+                    console.error("Chat error:", err);
+                }
+            }
+        };
+
+        window.sendSticker = async function(emoji) {
+            const senderName = gameState.players[myRole]?.name || myRole;
+
+            if (isSinglePlayerMode) {
+                displayAnimatedSticker(emoji, myRole);
+                gameState.chatMessages.push({
+                    sender: myRole,
+                    senderName: senderName,
+                    text: emoji,
+                    isSticker: true,
+                    timestamp: Date.now()
+                });
+                renderChatMessages();
+                return;
+            }
+
+            if (!roomDocRef) return;
+            const stickerObj = {
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                emoji: emoji,
+                senderRole: myRole
+            };
+
+            const updatedMsgs = [...(gameState.chatMessages || []), {
+                sender: myRole,
+                senderName: senderName,
+                text: emoji,
+                isSticker: true,
+                timestamp: Date.now()
+            }];
+
+            try {
+                await updateDoc(roomDocRef, {
+                    lastSticker: stickerObj,
+                    chatMessages: updatedMsgs
+                });
+                window.playSound('chat');
+            } catch (err) {
+                console.error("Sticker error:", err);
+            }
+        };
+
+        function displayAnimatedSticker(emoji, senderRole) {
+            const container = document.getElementById('sticker-layer');
+            const stickerEl = document.createElement('div');
+            stickerEl.className = 'floating-sticker absolute text-5xl z-30 select-none filter drop-shadow-lg';
+            stickerEl.style.top = `${30 + Math.random() * 40}%`;
+            stickerEl.style.left = `${30 + Math.random() * 40}%`;
+            stickerEl.innerText = emoji;
+
+            container.appendChild(stickerEl);
+            window.playSound('chat');
+
+            setTimeout(() => {
+                if (stickerEl.parentNode) {
+                    stickerEl.parentNode.removeChild(stickerEl);
+                }
+            }, 2300);
+        }
+
+        function renderChatMessages() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '<div class="text-center text-slate-500 text-[10px] my-0.5">--- Radio Chatter ---</div>';
+
+            gameState.chatMessages.forEach(msg => {
+                const msgEl = document.createElement('div');
+                const isMe = msg.sender === myRole;
+                const senderColor = PLAYER_COLORS[msg.sender]?.primary || '#64748b';
+                
+                const displayName = msg.senderName || (msg.sender ? msg.sender.toUpperCase() : 'PLAYER');
+
+                if (isMe) {
+                    msgEl.className = 'text-right my-0.5';
+                    if (msg.isSticker) {
+                        msgEl.innerHTML = `<span class="inline-block text-2xl p-0.5 animate-bounce">${escapeHtml(msg.text)}</span>`;
+                    } else {
+                        msgEl.innerHTML = `<span class="inline-block bg-cyan-600 text-white rounded-xl px-2.5 py-1 text-left shadow-sm">${escapeHtml(msg.text)}</span>`;
+                    }
+                } else {
+                    msgEl.className = 'text-left my-0.5';
+                    if (msg.isSticker) {
+                        msgEl.innerHTML = `
+                            <span class="block text-[8px] font-bold" style="color:${senderColor}">${escapeHtml(displayName)}</span>
+                            <span class="inline-block text-2xl p-0.5 animate-bounce">${escapeHtml(msg.text)}</span>
+                        `;
+                    } else {
+                        msgEl.innerHTML = `
+                            <span class="block text-[8px] font-bold" style="color:${senderColor}">${escapeHtml(displayName)}</span>
+                            <span class="inline-block bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-2.5 py-1 text-left shadow-sm">${escapeHtml(msg.text)}</span>
+                        `;
+                    }
+                }
+                container.appendChild(msgEl);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function showGameOverModal(winnerRole) {
+            const modal = document.getElementById('gameover-modal');
+            const trophy = document.getElementById('winner-trophy');
+            const title = document.getElementById('winner-title');
+            const msg = document.getElementById('winner-message');
+
+            modal.classList.remove('hidden');
+
+            const isWinner = winnerRole === myRole;
+            const winnerName = gameState.players[winnerRole]?.name || winnerRole.toUpperCase();
+
+            trophy.className = `w-16 h-16 ${PLAYER_COLORS[winnerRole]?.bg || 'bg-cyan-500'} text-white rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-xl animate-bounce`;
+            title.innerText = isWinner ? "🎉 VICTORY! 🎉" : "💥 DEFEAT! 💥";
+            msg.innerText = isWinner ? `Outstanding Commander! You (${winnerName}) dominated the war zone!` : `${winnerName} (${winnerRole.toUpperCase()}) secured victory!`;
+
+            if (isWinner) triggerVoiceLine("Kaboom!");
+            else triggerVoiceLine("Mayday!");
+        }
+
+        window.restartGame = async function() {
+            document.getElementById('gameover-modal').classList.add('hidden');
+
+            if (isSinglePlayerMode) {
+                window.startSinglePlayerGame();
+                return;
+            }
+
+            if (!roomDocRef) return;
+            await updateDoc(roomDocRef, {
+                status: 'active',
+                turn: 'red',
+                winner: null,
+                diceRolled: false,
+                diceValue: 0,
+                remainingSteps: 0,
+                planes: getDefaultPlanes(gameState.maxPlayers),
+                lines: []
+            });
+        };
+
+        function updateRoleBadge() {
+            const badge = document.getElementById('role-badge');
+            document.getElementById('display-room-code').innerText = isSinglePlayerMode ? 'SOLO' : currentRoomId;
+            document.getElementById('room-code-badge').classList.remove('hidden');
+            document.getElementById('player-count-display').innerText = `${gameState.maxPlayers}-Player ${isSinglePlayerMode ? 'Single Player' : 'Online'}`;
+
+            const displayName = gameState.players[myRole]?.name || 'Pilot';
+
+            if (myRole && PLAYER_COLORS[myRole]) {
+                badge.className = `px-2.5 py-1 text-white text-xs font-bold rounded-xl shadow ${PLAYER_COLORS[myRole].bg}`;
+                badge.innerText = `You: ${displayName} (${myRole.toUpperCase()})`;
+            }
+
+            const activeRoles = PLAYER_ORDER.slice(0, gameState.maxPlayers);
+            PLAYER_ORDER.forEach(r => {
+                const card = document.getElementById(`${r}-stat-card`);
+                if (activeRoles.includes(r)) {
+                    card.classList.remove('hidden');
+                    document.getElementById(`${r}-name-display`).innerText = gameState.players[r]?.name || r;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        function updateUI() {
+            const badge = document.getElementById('turn-badge');
+            const rollBtn = document.getElementById('roll-btn');
+            const diceBox = document.getElementById('dice-box');
+            const msgBox = document.getElementById('game-message');
+
+            const currentTurnRole = gameState.turn;
+            const currentTurnName = gameState.players[currentTurnRole]?.name || currentTurnRole.toUpperCase();
+
+            badge.style.backgroundColor = PLAYER_COLORS[currentTurnRole]?.primary + '30';
+            badge.style.color = PLAYER_COLORS[currentTurnRole]?.primary;
+            badge.innerText = `${currentTurnName}'s Turn`;
+
+            diceBox.innerText = gameState.diceValue > 0 ? gameState.diceValue : '-';
+
+            PLAYER_ORDER.slice(0, gameState.maxPlayers).forEach(r => {
+                const count = gameState.planes.filter(p => p.player === r && p.active).length;
+                document.getElementById(`${r}-planes-count`).innerText = count;
+            });
+
+            const isMyTurn = gameState.turn === myRole;
+
+            if (gameState.status === 'finished') {
+                rollBtn.disabled = true;
+                msgBox.innerText = `Game Finished! ${currentTurnName} won!`;
+                if (gameState.winner) showGameOverModal(gameState.winner);
+            } else if (gameState.status === 'waiting') {
+                rollBtn.disabled = true;
+                msgBox.innerText = `Waiting for players to join (${gameState.maxPlayers} player mode). Room: ${currentRoomId}`;
+            } else if (!isMyTurn) {
+                rollBtn.disabled = true;
+                msgBox.innerText = `Waiting for ${currentTurnName} (AI) to play...`;
+            } else {
+                if (!gameState.diceRolled) {
+                    rollBtn.disabled = false;
+                    msgBox.innerText = `YOUR turn! Click 'Roll Flight Dice' to calculate move.`;
+                } else {
+                    rollBtn.disabled = true;
+                    if (!gameState.selectedPlaneId) {
+                        msgBox.innerText = `Dice value: ${gameState.diceValue}. Tap one of your airplanes!`;
+                    } else {
+                        msgBox.innerText = `Steps remaining: ${gameState.remainingSteps}. Tap adjacent grid dot!`;
+                    }
+                }
+            }
+
+            if (isSinglePlayerMode && gameState.status === 'active' && gameState.turn !== myRole) {
+                triggerAITurn();
+            }
+        }
+
+        window.rollDice = async function() {
+            if (gameState.turn !== myRole || gameState.diceRolled || gameState.status !== 'active') return;
+
+            window.playSound('roll');
+            const diceBox = document.getElementById('dice-box');
+            diceBox.classList.add('rolling');
+
+            let bonusSteps = 0;
+            const myFighters = gameState.planes.filter(p => p.player === myRole && p.active && p.pClass === 'fighter');
+            if (myFighters.length > 0) bonusSteps = 1;
+
+            const val = Math.floor(Math.random() * 6) + 1 + bonusSteps;
+
+            setTimeout(async () => {
+                diceBox.classList.remove('rolling');
+                gameState.diceValue = val;
+                gameState.diceRolled = true;
+                gameState.remainingSteps = val;
+
+                if (!isSinglePlayerMode && roomDocRef) {
+                    await updateDoc(roomDocRef, {
+                        diceValue: val,
+                        diceRolled: true,
+                        remainingSteps: val
+                    });
+                }
+
+                updateUI();
+            }, 500);
+        };
+
+        let aiTurnInProgress = false;
+        async function triggerAITurn() {
+            if (aiTurnInProgress || gameState.turn === myRole || gameState.status !== 'active') return;
+            aiTurnInProgress = true;
+
+            const aiRole = gameState.turn;
+            await new Promise(res => setTimeout(res, 600));
+
+            window.playSound('roll');
+            const diceBox = document.getElementById('dice-box');
+            diceBox.classList.add('rolling');
+
+            const rollVal = Math.floor(Math.random() * 6) + 1;
+
+            setTimeout(() => {
+                diceBox.classList.remove('rolling');
+                gameState.diceValue = rollVal;
+                gameState.diceRolled = true;
+                gameState.remainingSteps = rollVal;
+                updateUI();
+
+                setTimeout(() => {
+                    executeAIMove(aiRole, rollVal);
+                }, 600);
+            }, 500);
+        }
+
+        function executeAIMove(aiRole, steps) {
+            const aiPlanes = gameState.planes.filter(p => p.player === aiRole && p.active);
+            if (aiPlanes.length === 0) {
+                aiTurnInProgress = false;
+                commitMoveSinglePlayer([]);
+                return;
+            }
+
+            let bestPlane = aiPlanes[Math.floor(Math.random() * aiPlanes.length)];
+            let bestPath = null;
+
+            for (const plane of aiPlanes) {
+                const path = findAIPath(plane, steps, aiRole);
+                if (path && path.length === steps + 1) {
+                    bestPlane = plane;
+                    bestPath = path;
+                    break;
+                }
+            }
+
+            if (!bestPath) {
+                bestPath = buildFallbackAIPath(bestPlane, steps, aiRole);
+            }
+
+            gameState.selectedPlaneId = bestPlane.id;
+            gameState.currentPath = [bestPath[0]];
+
+            let stepIdx = 1;
+            const moveInterval = setInterval(() => {
+                if (stepIdx < bestPath.length) {
+                    const fromPt = gameState.currentPath[gameState.currentPath.length - 1];
+                    const toPt = bestPath[stepIdx];
+
+                    window.playSound('step');
+                    gameState.currentPath.push(toPt);
+                    gameState.remainingSteps--;
+
+                    if (isClashPoint(fromPt, toPt)) {
+                        checkStepClashAndCollisions(fromPt, toPt);
+                    }
+
+                    stepIdx++;
+                } else {
+                    clearInterval(moveInterval);
+                    aiTurnInProgress = false;
+                    commitMoveSinglePlayer(gameState.currentPath);
+                }
+            }, 250);
+        }
+
+        function findAIPath(plane, steps, aiRole) {
+            const targetPlanes = gameState.planes.filter(p => p.player !== aiRole && p.active);
+            if (targetPlanes.length === 0) return null;
+
+            let closestTarget = targetPlanes[0];
+            let minDist = Math.hypot(plane.x - closestTarget.x, plane.y - closestTarget.y);
+            for (const tp of targetPlanes) {
+                const d = Math.hypot(plane.x - tp.x, plane.y - tp.y);
+                if (d < minDist) {
+                    minDist = d;
+                    closestTarget = tp;
+                }
+            }
+
+            const path = [{ x: plane.x, y: plane.y }];
+            let curr = { x: plane.x, y: plane.y };
+
+            for (let s = 0; s < steps; s++) {
+                const neighbors = [];
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        if (dx === 0 && dy === 0) continue;
+                        const nx = curr.x + dx;
+                        const ny = curr.y + dy;
+
+                        if (nx >= 0 && nx <= COLS && ny >= 0 && ny <= ROWS) {
+                            if (!path.some(pt => pt.x === nx && pt.y === ny)) {
+                                const causesClash = isClashPoint(curr, { x: nx, y: ny });
+                                const isFinal = (s === steps - 1);
+                                if (!causesClash || isFinal) {
+                                    const dist = Math.hypot(nx - closestTarget.x, ny - closestTarget.y);
+                                    neighbors.push({ x: nx, y: ny, dist });
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (neighbors.length === 0) break;
+                neighbors.sort((a, b) => a.dist - b.dist);
+                curr = { x: neighbors[0].x, y: neighbors[0].y };
+                path.push(curr);
+            }
+
+            return path;
+        }
+
+        function buildFallbackAIPath(plane, steps, aiRole) {
+            const path = [{ x: plane.x, y: plane.y }];
+            let curr = { x: plane.x, y: plane.y };
+
+            for (let s = 0; s < steps; s++) {
+                const neighbors = [];
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        if (dx === 0 && dy === 0) continue;
+                        const nx = curr.x + dx;
+                        const ny = curr.y + dy;
+
+                        if (nx >= 0 && nx <= COLS && ny >= 0 && ny <= ROWS) {
+                            if (!path.some(pt => pt.x === nx && pt.y === ny)) {
+                                const causesClash = isClashPoint(curr, { x: nx, y: ny });
+                                const isFinal = (s === steps - 1);
+                                if (!causesClash || isFinal) {
+                                    neighbors.push({ x: nx, y: ny });
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (neighbors.length === 0) break;
+                const pick = neighbors[Math.floor(Math.random() * neighbors.length)];
+                curr = { x: pick.x, y: pick.y };
+                path.push(curr);
+            }
+
+            return path;
+        }
+
+        function triggerExplosion(x, y, color = '#f97316') {
+            window.playSound('clash');
+            for (let i = 0; i < 20; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 5;
+                gameState.clashPoints.push({
+                    x: x * CELL_SIZE,
+                    y: y * CELL_SIZE,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    radius: 3 + Math.random() * 4,
+                    color: color,
+                    life: 1.0
+                });
+            }
+        }
+
+        function isClashPoint(fromPt, toPt) {
+            const hitsPlane = gameState.planes.some(p => p.player !== gameState.turn && p.active && p.x === toPt.x && p.y === toPt.y);
+            if (hitsPlane) return true;
+
+            for (const line of gameState.lines) {
+                if (line.player !== gameState.turn) {
+                    const touchPoint = (line.from.x === toPt.x && line.from.y === toPt.y) || 
+                                       (line.to.x === toPt.x && line.to.y === toPt.y);
+                    const crosses = linesIntersect(fromPt, toPt, line.from, line.to);
+                    if (touchPoint || crosses) return true;
+                }
+            }
+            return false;
+        }
+
+        function handleCanvasInteraction(event) {
+            if (gameState.turn !== myRole || gameState.status !== 'active') return;
+
+            if (!gameState.diceRolled) {
+                window.showNotification("Roll Required", "Please roll flight dice first!", "error");
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+
+            const gridX = Math.round(clickX / CELL_SIZE);
+            const gridY = Math.round(clickY / CELL_SIZE);
+
+            if (gridX < 0 || gridX > COLS || gridY < 0 || gridY > ROWS) return;
+
+            if (!gameState.selectedPlaneId) {
+                const clickedPlane = gameState.planes.find(p => p.player === gameState.turn && p.active && p.x === gridX && p.y === gridY);
+                if (clickedPlane) {
+                    gameState.selectedPlaneId = clickedPlane.id;
+                    gameState.currentPath = [{ x: clickedPlane.x, y: clickedPlane.y }];
+                    window.playSound('step');
+                    updateUI();
+                } else {
+                    window.showNotification("Selection Error", "Tap on one of your active airplanes.", "error");
+                }
+                return;
+            }
+
+            const currentHead = gameState.currentPath[gameState.currentPath.length - 1];
+            const dx = Math.abs(gridX - currentHead.x);
+            const dy = Math.abs(gridY - currentHead.y);
+
+            if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1) || (dx === 1 && dy === 1)) {
+                const alreadyVisited = gameState.currentPath.some(pt => pt.x === gridX && pt.y === gridY);
+                if (alreadyVisited) {
+                    window.playSound('error');
+                    window.showNotification("Invalid Move", "Cannot revisit same vertex.", "error");
+                    return;
+                }
+
+                let destination = { x: gridX, y: gridY };
+
+                const causesClash = isClashPoint(currentHead, destination);
+
+                if (causesClash && gameState.remainingSteps > 1) {
+                    window.playSound('error');
+                    window.showNotification("Clash Blocked!", `Clash requires EXACT step match on final move.`, "error");
+                    return;
+                }
+
+                window.playSound('step');
+                gameState.currentPath.push(destination);
+                gameState.remainingSteps--;
+
+                if (causesClash) {
+                    checkStepClashAndCollisions(currentHead, destination);
+                }
+
+                if (gameState.remainingSteps === 0) {
+                    if (isSinglePlayerMode) {
+                        commitMoveSinglePlayer(gameState.currentPath);
+                    } else {
+                        commitMove();
+                    }
+                } else {
+                    updateUI();
+                }
+            }
+        }
+
+        function linesIntersect(p0, p1, p2, p3) {
+            function ccw(A, B, C) {
+                return (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x);
+            }
+            return (ccw(p0, p2, p3) !== ccw(p1, p2, p3)) && (ccw(p0, p1, p2) !== ccw(p0, p1, p3));
+        }
+
+        function checkStepClashAndCollisions(fromPt, toPt) {
+            gameState.planes.forEach(plane => {
+                if (plane.player !== gameState.turn && plane.active) {
+                    if (plane.x === toPt.x && plane.y === toPt.y) {
+                        if (plane.shielded) {
+                            plane.shielded = false;
+                            window.showNotification("🛡️ Shield Broke!", "Rival shield absorbed attack!", "info");
+                        } else {
+                            plane.active = false;
+                            window.playSound('hit');
+                            triggerVoiceLine("Kaboom!");
+                            triggerExplosion(toPt.x, toPt.y, '#ef4444');
+                        }
+                    }
+                }
+            });
+
+            for (let i = gameState.lines.length - 1; i >= 0; i--) {
+                const line = gameState.lines[i];
+                if (line.player !== gameState.turn) {
+                    const touchPoint = (line.from.x === toPt.x && line.from.y === toPt.y) || 
+                                       (line.to.x === toPt.x && line.to.y === toPt.y);
+                    const crosses = linesIntersect(fromPt, toPt, line.from, line.to);
+
+                    if (touchPoint || crosses) {
+                        gameState.lines.splice(i, 1);
+                        triggerExplosion(toPt.x, toPt.y, '#eab308');
+                    }
+                }
+            }
+        }
+
+        function getNextTurnRole(current) {
+            const activeRoles = PLAYER_ORDER.slice(0, gameState.maxPlayers);
+            let idx = activeRoles.indexOf(current);
+            
+            for (let i = 1; i <= activeRoles.length; i++) {
+                const nextIdx = (idx + i) % activeRoles.length;
+                const nextRole = activeRoles[nextIdx];
+                const hasPlanes = gameState.planes.some(p => p.player === nextRole && p.active);
+                if (hasPlanes) return nextRole;
+            }
+            return current;
+        }
+
+        function commitMoveSinglePlayer(path) {
+            const playerColor = PLAYER_COLORS[gameState.turn]?.primary || '#6366f1';
+
+            for (let i = 0; i < path.length - 1; i++) {
+                gameState.lines.push({
+                    from: path[i],
+                    to: path[i+1],
+                    color: playerColor,
+                    player: gameState.turn
+                });
+            }
+
+            if (path.length > 0) {
+                const finalPt = path[path.length - 1];
+                gameState.planes.forEach(p => {
+                    if (p.id === gameState.selectedPlaneId && p.active) {
+                        p.x = finalPt.x;
+                        p.y = finalPt.y;
+                    }
+                });
+                triggerExplosion(finalPt.x, finalPt.y, playerColor);
+            }
+
+            const activeRoles = PLAYER_ORDER.slice(0, gameState.maxPlayers);
+            const survivingRoles = activeRoles.filter(role => 
+                gameState.planes.some(p => p.player === role && p.active)
+            );
+
+            if (survivingRoles.length === 1) {
+                gameState.winner = survivingRoles[0];
+                gameState.status = 'finished';
+                showGameOverModal(gameState.winner);
+            } else {
+                gameState.turn = getNextTurnRole(gameState.turn);
+            }
+
+            gameState.selectedPlaneId = null;
+            gameState.currentPath = [];
+            gameState.diceRolled = false;
+            gameState.diceValue = 0;
+            gameState.remainingSteps = 0;
+
+            updateUI();
+        }
+
+        async function commitMove() {
+            const playerColor = PLAYER_COLORS[gameState.turn]?.primary || '#6366f1';
+            const updatedLines = [...gameState.lines];
+
+            for (let i = 0; i < gameState.currentPath.length - 1; i++) {
+                updatedLines.push({
+                    from: gameState.currentPath[i],
+                    to: gameState.currentPath[i+1],
+                    color: playerColor,
+                    player: gameState.turn
+                });
+            }
+
+            const finalPt = gameState.currentPath[gameState.currentPath.length - 1];
+            const updatedPlanes = gameState.planes.map(p => {
+                if (p.id === gameState.selectedPlaneId && p.active) {
+                    return { ...p, x: finalPt.x, y: finalPt.y };
+                }
+                return p;
+            });
+
+            const activeRoles = PLAYER_ORDER.slice(0, gameState.maxPlayers);
+            const survivingRoles = activeRoles.filter(role => 
+                updatedPlanes.some(p => p.player === role && p.active)
+            );
+
+            let winner = null;
+            let status = 'active';
+
+            if (survivingRoles.length === 1) {
+                winner = survivingRoles[0];
+                status = 'finished';
+            }
+
+            const nextTurn = getNextTurnRole(gameState.turn);
+
+            gameState.selectedPlaneId = null;
+            gameState.currentPath = [];
+
+            try {
+                await updateDoc(roomDocRef, {
+                    lines: updatedLines,
+                    planes: updatedPlanes,
+                    turn: nextTurn,
+                    status: status,
+                    winner: winner,
+                    diceRolled: false,
+                    diceValue: 0,
+                    remainingSteps: 0,
+                    lastExplosion: { x: finalPt.x, y: finalPt.y, color: playerColor }
+                });
+            } catch (err) {
+                console.error("Error committing move:", err);
+            }
+        }
+
+        function updateParticles() {
+            for (let i = gameState.clashPoints.length - 1; i >= 0; i--) {
+                const p = gameState.clashPoints[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.03;
+                if (p.life <= 0) {
+                    gameState.clashPoints.splice(i, 1);
+                }
+            }
+        }
+
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Grid Background
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid Lines
+            ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+            ctx.lineWidth = 1;
+
+            for (let x = 0; x <= canvas.width; x += CELL_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+
+            for (let y = 0; y <= canvas.height; y += CELL_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Grid Dots
+            ctx.fillStyle = '#475569';
+            for (let x = 0; x <= COLS; x++) {
+                for (let y = 0; y <= ROWS; y++) {
+                    ctx.beginPath();
+                    ctx.arc(x * CELL_SIZE, y * CELL_SIZE, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Move Step Indicators
+            if (gameState.selectedPlaneId && gameState.remainingSteps > 0 && gameState.currentPath.length > 0) {
+                const head = gameState.currentPath[gameState.currentPath.length - 1];
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        if (dx === 0 && dy === 0) continue;
+                        const nx = head.x + dx;
+                        const ny = head.y + dy;
+
+                        if (nx >= 0 && nx <= COLS && ny >= 0 && ny <= ROWS) {
+                            const causesClash = isClashPoint(head, { x: nx, y: ny });
+                            ctx.beginPath();
+                            ctx.arc(nx * CELL_SIZE, ny * CELL_SIZE, 4, 0, Math.PI * 2);
+                            if (causesClash) {
+                                ctx.fillStyle = gameState.remainingSteps === 1 ? '#f59e0b' : '#ef4444';
+                            } else {
+                                ctx.fillStyle = '#06b6d4';
+                            }
+                            ctx.fill();
+                        }
+                    }
+                }
+            }
+
+            // Travel Lines
+            gameState.lines.forEach(line => {
+                ctx.strokeStyle = line.color;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(line.from.x * CELL_SIZE, line.from.y * CELL_SIZE);
+                ctx.lineTo(line.to.x * CELL_SIZE, line.to.y * CELL_SIZE);
+                ctx.stroke();
+            });
+
+            // Path Move Preview
+            if (gameState.currentPath.length > 1) {
+                ctx.strokeStyle = PLAYER_COLORS[gameState.turn]?.primary || '#06b6d4';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(gameState.currentPath[0].x * CELL_SIZE, gameState.currentPath[0].y * CELL_SIZE);
+                for (let i = 1; i < gameState.currentPath.length; i++) {
+                    ctx.lineTo(gameState.currentPath[i].x * CELL_SIZE, gameState.currentPath[i].y * CELL_SIZE);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Explosion Particles
+            gameState.clashPoints.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Draw Airplanes
+            gameState.planes.forEach(plane => {
+                if (!plane.active) return;
+
+                const px = plane.x * CELL_SIZE;
+                const py = plane.y * CELL_SIZE;
+                const isSelected = gameState.selectedPlaneId === plane.id;
+
+                ctx.save();
+                ctx.translate(px, py);
+
+                if (plane.player === 'red') ctx.rotate(Math.PI);
+                else if (plane.player === 'green') ctx.rotate(Math.PI / 2);
+                else if (plane.player === 'yellow') ctx.rotate(-Math.PI / 2);
+
+                if (isSelected) {
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 18, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                const primaryWingColor = PLAYER_COLORS[plane.player]?.primary || '#38bdf8';
+                const darkWingColor = PLAYER_COLORS[plane.player]?.dark || '#0284c7';
+
+                const scale = CELL_SIZE / 32;
+                ctx.scale(scale, scale);
+
+                // Wings
+                ctx.fillStyle = primaryWingColor;
+                ctx.beginPath();
+                ctx.moveTo(-3, -8);
+                ctx.lineTo(-20, 8);
+                ctx.lineTo(-20, 12);
+                ctx.lineTo(-3, 3);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = darkWingColor;
+                ctx.beginPath();
+                ctx.moveTo(3, -8);
+                ctx.lineTo(20, 8);
+                ctx.lineTo(20, 12);
+                ctx.lineTo(3, 3);
+                ctx.closePath();
+                ctx.fill();
+
+                // Fuselage
+                ctx.fillStyle = '#f8fafc';
+                ctx.beginPath();
+                ctx.moveTo(0, -18);
+                ctx.bezierCurveTo(-4, -12, -4, 10, 0, 18);
+                ctx.closePath();
+                ctx.fill();
+
+                if (plane.shielded) {
+                    ctx.strokeStyle = '#3b82f6';
+                    ctx.lineWidth = 3.5;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 22, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                ctx.fillStyle = '#cbd5e1';
+                ctx.beginPath();
+                ctx.moveTo(0, -18);
+                ctx.bezierCurveTo(4, -12, 4, 10, 0, 18);
+                ctx.closePath();
+                ctx.fill();
+
+                // Cockpit
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.moveTo(-3, -10);
+                ctx.quadraticCurveTo(0, -14, 3, -10);
+                ctx.quadraticCurveTo(0, -8, -3, -10);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+            });
+        }
+    </script>
+</body>
+</html>
